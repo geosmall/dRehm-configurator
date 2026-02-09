@@ -2437,7 +2437,10 @@ OSD.reload = function(callback) {
                     
                     MSP.promise(MSPCodes.MSP2_INAV_CUSTOM_OSD_ELEMENTS).then(() => {
                         mspHelper.loadOsdCustomElements(() => {
-                            MSP.send_message(MSPCodes.MSP2_INAV_LOGIC_CONDITIONS_CONFIGURED, false, false, function() {
+                            MSP.promise(MSPCodes.MSP2_INAV_LOGIC_CONDITIONS_CONFIGURED).then(() => {
+                                createCustomElements();
+                                done();
+                            }).catch(() => {
                                 createCustomElements();
                                 done();
                             });
@@ -4181,8 +4184,8 @@ function getLCoptions(){
     }
     for (var i = 0; i < 64; i++) {
         var isConfigured = (i < 32) ?
-            (mask.lower & (1 << i)) !== 0 :
-            (mask.upper & (1 << (i - 32))) !== 0;
+            ((mask.lower >>> i) & 1) === 1 :
+            ((mask.upper >>> (i - 32)) & 1) === 1;
         if (isConfigured) {
             result += '<option value="' + i + '">LC ' + i + '</option>';
         }
