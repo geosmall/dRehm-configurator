@@ -23,9 +23,11 @@ import dialog from '../js/dialog.js';
 
 TABS.firmware_flasher = {};
 
-// Allow hyphens due to 9.0.0 patch
+// Normalize target names to underscores for consistent dictionary lookups.
+// Hyphens supported as workaround for 9.0.0 filename inconsistency.
 function normalizeTargetName(name) {
-    return name.replace(/-/g, '_');
+    if (name == null) return '';
+    return String(name).replace(/-/g, '_');
 }
 
 TABS.firmware_flasher.initialize = function (callback) {
@@ -123,7 +125,7 @@ TABS.firmware_flasher.initialize = function (callback) {
             if (selectedTarget === "0") {
                 TABS.firmware_flasher.getTarget();
             } else {
-                $('select[name="board"] option[value=' + selectedTarget + ']').attr("selected", "selected");
+                $('select[name="board"] option[value="' + selectedTarget + '"]').attr("selected", "selected");
                 $('select[name="board"]').trigger('change');
             }
         });
@@ -230,7 +232,10 @@ TABS.firmware_flasher.initialize = function (callback) {
                         "notes"     : release.body,
                         "status"    : release.prerelease ? "release-candidate" : "stable"
                     };
-                    releases[result.target_id].push(descriptor);
+                    // Skip duplicate entries (e.g. both hyphen and underscore variants of same target+version)
+                    if (!releases[result.target_id].some(d => d.version === descriptor.version && d.status === descriptor.status)) {
+                        releases[result.target_id].push(descriptor);
+                    }
                 });
             });
 
@@ -284,7 +289,10 @@ TABS.firmware_flasher.initialize = function (callback) {
                             "notes"     : release.body,
                             "status"    : release.prerelease ? "nightly" : "stable"
                         };
-                        releases[result.target_id].push(descriptor);
+                        // Skip duplicate entries (e.g. both hyphen and underscore variants of same target+version)
+                        if (!releases[result.target_id].some(d => d.version === descriptor.version && d.status === descriptor.status)) {
+                            releases[result.target_id].push(descriptor);
+                        }
                     });
                 });
             }
@@ -334,6 +342,7 @@ TABS.firmware_flasher.initialize = function (callback) {
 
                 $("a.load_remote_file").addClass('disabled');
                 var target = $(this).children("option:selected").val();
+                var targetDisplay = $(this).children("option:selected").text();
 
                 if (!GUI.connect_lock) {
                     $('.progress').val(0).removeClass('valid invalid');
@@ -346,7 +355,7 @@ TABS.firmware_flasher.initialize = function (callback) {
                     if(target == 0) {
                         versions_e.append($("<option value='0'>{0}</option>".format(i18n.getMessage('firmwareFlasherOptionLabelSelectFirmwareVersion'))));
                     } else {
-                        versions_e.append($("<option value='0'>{0} {1}</option>".format(i18n.getMessage('firmwareFlasherOptionLabelSelectFirmwareVersionFor'), target)));
+                        versions_e.append($("<option value='0'>{0} {1}</option>".format(i18n.getMessage('firmwareFlasherOptionLabelSelectFirmwareVersionFor'), targetDisplay)));
                     }
 
                     if (typeof TABS.firmware_flasher.releases[target]?.forEach === 'function') {
