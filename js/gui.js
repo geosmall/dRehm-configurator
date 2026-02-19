@@ -19,37 +19,18 @@ var GUI_control = function () {
     this.operating_system;
     this.defaultAllowedTabsWhenDisconnected = [
         'landing',
-        'firmware_flasher',
-        'mission_control',
-        'sitl',
         'help'
     ];
     this.defaultAllowedTabsWhenConnected = [
-        'failsafe',
-        'adjustments',
-        'auxiliary',
         'cli',
-        'configuration',
-        'gps',
         'magnetometer',
-        'led_strip',
-        'logging',
-        'onboard_logging',
         'outputs',
         'pid_tuning',
-        'ports',
         'receiver',
         'sensors',
         'calibration',
         'setup',
-        'osd',
-        'profiles',
-        'advanced_tuning',
-        'mission_control',
         'mixer',
-        'programming',
-        'javascript_programming',
-        'ez_tune',
         'search'
     ];
     this.allowedTabs = this.defaultAllowedTabsWhenDisconnected;

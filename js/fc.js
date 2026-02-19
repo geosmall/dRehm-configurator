@@ -855,17 +855,17 @@ var FC = {
     },
     getPidNames: function () {
         return [
-            'Roll',
-            'Pitch',
+            'Roll (Angle)',
+            'Pitch (Angle)',
             'Yaw',
-            'Position Z',
-            'Position XY',
-            'Velocity XY',
-            'Surface',
-            'Level',
-            'Heading Hold',
-            'Velocity Z',
-            'Nav Heading'
+            'unused',
+            'unused',
+            'unused',
+            'unused',
+            'Roll/Pitch (Rate)',
+            'Loop Damping',
+            'unused',
+            'unused'
         ];
     },
     getRthAltControlMode: function () {

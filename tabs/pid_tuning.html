@@ -216,7 +216,7 @@
                         <input type="range" name="value-slider" value="42" min="0" max="1000" step="1"  data-normal-max="60">
                     </div>
 
-                    <div class="pid-slider-row">
+                    <div class="pid-slider-row" style="display:none">
                         <span data-i18n="pidTuning_FeedForward"></span>
                         <input type="number" name="value-input" value="42" min="0" max="255" step="1" class="controlProfileHighlightActive">
                         <input type="range" name="value-slider" value="42" min="0" max="1000" step="1"  data-normal-max="150">
@@ -244,7 +244,7 @@
                         <input type="range" name="value-slider" value="42" min="0" max="1000" step="1" data-normal-max="60">
                     </div>
 
-                    <div class="pid-slider-row">
+                    <div class="pid-slider-row" style="display:none">
                         <span data-i18n="pidTuning_FeedForward"></span>
                         <input type="number" name="value-input" value="42" min="0" max="255" step="1" class="controlProfileHighlightActive">
                         <input type="range" name="value-slider" value="42" min="0" max="1000" step="1" data-normal-max="150">
@@ -272,7 +272,7 @@
                         <input type="range" name="value-slider" value="42" min="0" max="1000" step="1" data-normal-max="60">
                     </div>
 
-                    <div class="pid-slider-row">
+                    <div class="pid-slider-row" style="display:none">
                         <span data-i18n="pidTuning_FeedForward"></span>
                         <input type="number" name="value-input" value="42" min="0" max="255" step="1" class="controlProfileHighlightActive">
                         <input type="range" name="value-slider" value="42" min="0" max="1000" step="1" data-normal-max="150">
@@ -301,7 +301,7 @@
                             <th class="proportional" data-i18n="pidTuning_Proportional"></th>
                             <th class="integral" data-i18n="pidTuning_Integral"></th>
                             <th class="derivative" data-i18n="pidTuning_Derivative"></th>
-                            <th class="feedforward" data-i18n="pidTuning_FeedForward"></th>
+                            <th class="feedforward" data-i18n="pidTuning_FeedForward" style="display:none"></th>
                         </tr>
                     </table>
                     <table id="pid_main" class="pid_tuning">
@@ -335,7 +335,7 @@
                             <td><input class="controlProfileHighlight" type="number" class="rpy_ff" name="ff" step="1" min="0" max="255" /></td>
                         </tr>
                     </table>
-                    <table id="pid_baro" class="pid_tuning">
+                    <table id="pid_baro" class="pid_tuning" style="display:none">
                         <tr>
                             <th colspan="5">
                                 <div class="pid_mode" data-i18n="pidTuning_Altitude"></div>
@@ -372,7 +372,7 @@
                             <td></td>
                             <td></td>
                         </tr>
-                        <tr class="HEADING" data-pid-bank-position="10">
+                        <tr class="HEADING" data-pid-bank-position="10" style="display:none">
                             <!-- 8 -->
                             <td></td>
                             <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
@@ -381,7 +381,7 @@
                             <td></td>
                         </tr>
                     </table>
-                    <table id="pid_gps" class="pid_tuning">
+                    <table id="pid_gps" class="pid_tuning" style="display:none">
                         <tr>
                             <th colspan="5">
                                 <div class="pid_mode" data-i18n="pidTuning_GPS"></div>

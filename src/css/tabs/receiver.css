@@ -26,7 +26,7 @@
 
 .tab-receiver .bars ul {
     margin-bottom: 5px;
-    clear: left;
+    clear: both;
 }
 
 .tab-receiver .bars li {
