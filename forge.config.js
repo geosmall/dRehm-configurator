@@ -154,10 +154,10 @@ export default {
     {
       name: '@electron-forge/maker-dmg',
       config: {
-        name: "INAV Configurator",
-        title: "INAV-Configurator",  // Volume name without spaces to avoid hdiutil detach issues
+        name: "dRehmFlight Configurator",
+        title: "dRehmFlight-Configurator",  // Volume name without spaces to avoid hdiutil detach issues
         background: "./assets/osx/dmg-background.png",
-        icon: "./images/inav.icns"
+        icon: "./images/drehm.icns"
       }
     },
     {
@@ -168,12 +168,12 @@ export default {
       name: '@electron-forge/maker-deb',
       config: {
         options: {
-          name: "inav-configurator",
-          productName: "INAV Configurator",
+          name: "drehm-configurator",
+          productName: "dRehmFlight Configurator",
           categories: ["Utility"],
-          icon: "./assets/linux/icon/inav_icon_128.png",
-          description: "Configurator for the open source flight controller software INAV.",
-          homepage: "https://github.com/inavflight/",
+          icon: "./assets/linux/icon/drehm_icon_128.png",
+          description: "Configurator for the dRehmFlight flight controller firmware.",
+          homepage: "https://github.com/geosmall/dRehm-configurator",
 
         }
       },
@@ -182,13 +182,13 @@ export default {
       name: '@electron-forge/maker-rpm',
       config: {
         options: {
-          name: "inav-configurator",
-          productName: "INAV Configurator",
+          name: "drehm-configurator",
+          productName: "dRehmFlight Configurator",
           license: "GPL-3.0",
           categories: ["Utility"],
-          icon: "./assets/linux/icon/inav_icon_128.png",
-          description: "Configurator for the open source flight controller software INAV.",
-          homepage: "https://github.com/inavflight/",
+          icon: "./assets/linux/icon/drehm_icon_128.png",
+          description: "Configurator for the dRehmFlight flight controller firmware.",
+          homepage: "https://github.com/geosmall/dRehm-configurator",
         }
       },
     },

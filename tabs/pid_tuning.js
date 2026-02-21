@@ -403,39 +403,15 @@ TABS.pid_tuning.initialize = function (callback) {
         });
 
         // update == save.
+        // dRehmFlight: simplified save chain — only MSP2_SET_PID + MSP_EEPROM_WRITE
+        // are supported. Rate profile, rate dynamics, EZ tune, and Settings are
+        // skipped to prevent the callback chain from breaking.
         $('a.update').on('click', function () {
-            form_to_pid_and_rc();
-
-            if ($("#ez_tune_enabled").is(":checked")) {
-                FC.EZ_TUNE.enabled = 1;
-            } else {
-                FC.EZ_TUNE.enabled = 0;
-            }
-
-            FC.EZ_TUNE.filterHz = $('#ez_tune_filter_hz').val();
-            FC.EZ_TUNE.axisRatio = $('#ez_tune_axis_ratio').val();
-            FC.EZ_TUNE.response = $('#ez_tune_response').val();
-            FC.EZ_TUNE.damping = $('#ez_tune_damping').val();
-            FC.EZ_TUNE.stability = $('#ez_tune_stability').val();
-            FC.EZ_TUNE.aggressiveness = $('#ez_tune_aggressiveness').val();
-            FC.EZ_TUNE.rate = $('#ez_tune_rate').val();
-            FC.EZ_TUNE.expo = $('#ez_tune_expo').val();
-            FC.EZ_TUNE.snappiness = $('#ez_tune_snappiness').val();
-
-            function send_rc_tuning_changes() {
-                MSP.send_message(MSPCodes.MSPV2_INAV_SET_RATE_PROFILE, mspHelper.crunch(MSPCodes.MSPV2_INAV_SET_RATE_PROFILE), false, saveRateDynamics);
-            }
-
-            function saveRateDynamics() {
-                mspHelper.saveRateDynamics(saveEzTune);
-            }
-
-            function saveEzTune() {
-                mspHelper.saveEzTune(saveSettings)
-            }
-
-            function saveSettings() {
-                Settings.saveInputs(save_to_eeprom);
+            // Only read PID Table form inputs when the PID Table subtab is active.
+            // PID Sliders update FC.PIDs directly via slider input handlers, so
+            // calling form_to_pid_and_rc() would overwrite them with stale table values.
+            if ($('#subtab-pid-other').hasClass('subtab__content--current')) {
+                form_to_pid_and_rc();
             }
 
             function save_to_eeprom() {
@@ -444,7 +420,7 @@ TABS.pid_tuning.initialize = function (callback) {
                 });
             }
 
-            mspHelper.savePidData(send_rc_tuning_changes); 
+            mspHelper.savePidData(save_to_eeprom);
         });
 
         GUI.content_ready(callback);

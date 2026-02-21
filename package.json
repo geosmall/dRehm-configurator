@@ -1,7 +1,7 @@
 {
-  "name": "inav-configurator",
-  "productName": "INAV Configurator",
-  "description": "Configurator for the open source flight controller software INAV.",
+  "name": "drehm-configurator",
+  "productName": "dRehmFlight Configurator",
+  "description": "Configurator for the dRehmFlight flight controller firmware.",
   "version": "9.0.0",
   "main": ".vite/build/main.js",
   "type": "module",
@@ -14,9 +14,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com/iNavFlight/inav-configurator"
+    "url": "github.com/geosmall/dRehm-configurator"
   },
-  "author": "The INAV open source project",
+  "author": "geosmall",
   "license": "GPL-3.0",
   "dependencies": {
     "acorn": "^8.14.0",

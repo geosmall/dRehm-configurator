@@ -863,7 +863,7 @@ var FC = {
             'unused',
             'unused',
             'Roll/Pitch (Rate)',
-            'Loop Damping',
+            'Roll / Pitch',
             'unused',
             'unused'
         ];

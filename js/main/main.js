@@ -113,7 +113,7 @@ function createWindow() {
     width: mainWindowState.width,
     height: mainWindowState.height,
     autoHideMenuBar: true,
-    icon: "images/inav_icon_128.png",
+    icon: "images/drehm_icon_128.png",
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       nodeIntegration: true,
@@ -285,11 +285,11 @@ app.whenReady().then(() => {
   }),
 
   ipcMain.on('dialog.alert', (event, message) => {
-    event.returnValue = dialog.showMessageBoxSync({ message: message, icon: path.join(__dirname, 'inav_icon_128.png')});
+    event.returnValue = dialog.showMessageBoxSync({ message: message, icon: path.join(__dirname, 'drehm_icon_128.png')});
   });
 
   ipcMain.on('dialog.confirm', (event, message) => {
-    event.returnValue = (dialog.showMessageBoxSync({ message: message, icon: path.join(__dirname, 'inav_icon_128.png'), buttons: ["Yes", "No"]}) == 0);
+    event.returnValue = (dialog.showMessageBoxSync({ message: message, icon: path.join(__dirname, 'drehm_icon_128.png'), buttons: ["Yes", "No"]}) == 0);
   });
 
   ipcMain.handle('tcpConnect', (_event, host, port) => {

@@ -3,11 +3,11 @@
 <div class="tab-pid_tuning toolbar_fixed_bottom">
     <div id="tuning-wrapper" class="content_wrapper">
         <div class="tab_title subtab__header">
-            <span class="subtab__header_label subtab__header_label--current" for="subtab-pid" data-i18n="pidTuning_PIDmain"></span>
-            <span class="subtab__header_label" for="subtab-pid-other" data-i18n="pidTuning_PIDother"></span>
-            <span class="subtab__header_label" for="subtab-rates" data-i18n="pidTuning_RatesAndExpo"></span>
-            <span class="subtab__header_label" for="subtab-filters" data-i18n="pidTuning_Filters"></span>
-            <span class="subtab__header_label" for="subtab-mechanics" data-i18n="pidTuning_Mechanics"></span>
+            <span class="subtab__header_label subtab__header_label--current" for="subtab-pid">PID Sliders</span>
+            <span class="subtab__header_label" for="subtab-pid-other">PID Table</span>
+            <span class="subtab__header_label" for="subtab-rates" style="display:none" data-i18n="pidTuning_RatesAndExpo"></span>
+            <span class="subtab__header_label" for="subtab-filters" style="display:none" data-i18n="pidTuning_Filters"></span>
+            <span class="subtab__header_label" for="subtab-mechanics" style="display:none" data-i18n="pidTuning_Mechanics"></span>
         </div>
         <div id="subtab-pid" class="subtab__content subtab__content--current">
             <div class="cf_column right" style="margin-top: -6px;">
@@ -20,7 +20,7 @@
             </div>
             <div class="clear-both"></div>
 
-            <div id="" class="cf_column">
+            <div id="" class="cf_column" style="display:none">
                 <div class="pid-sliders-axis" style="background-color: #2a9d8f;">
                     <div style="padding: 1em;" data-i18n="ezTuneEnabledTips"></div>
                     <div class="pid-switch-row">
@@ -297,143 +297,64 @@
                 <div class="gui_box grey">
                     <table class="pid_titlebar">
                         <tr>
-                            <th class="name" data-i18n="pidTuning_Name"></th>
-                            <th class="proportional" data-i18n="pidTuning_Proportional"></th>
-                            <th class="integral" data-i18n="pidTuning_Integral"></th>
-                            <th class="derivative" data-i18n="pidTuning_Derivative"></th>
-                            <th class="feedforward" data-i18n="pidTuning_FeedForward" style="display:none"></th>
+                            <th class="name">Name</th>
+                            <th class="proportional">P</th>
+                            <th class="integral">I</th>
+                            <th class="derivative">D</th>
                         </tr>
                     </table>
-                    <table id="pid_main" class="pid_tuning">
-                        <tr class="is-hidden">
-                            <th colspan="5">
-                                <div class="pid_mode" data-i18n="pidTuning_Basic"></div>
-                            </th>
-                        </tr>
-                        <tr class="is-hidden" class="ROLL" data-pid-bank-position="0">
-                            <!-- 0 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" class="rpy_d" name="d" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" class="rpy_ff" name="ff" step="1" min="0" max="255" /></td>
-                        </tr>
-                        <tr class="is-hidden" class="PITCH" data-pid-bank-position="1">
-                            <!-- 1 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" class="rpy_d" name="d" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" class="rpy_ff" name="ff" step="1" min="0" max="255" /></td>
-                        </tr>
-                        <tr class="is-hidden" class="YAW" data-pid-bank-position="2">
-                            <!-- 2 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" class="rpy_d" name="d" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" class="rpy_ff" name="ff" step="1" min="0" max="255" /></td>
-                        </tr>
-                    </table>
-                    <table id="pid_baro" class="pid_tuning" style="display:none">
-                        <tr>
-                            <th colspan="5">
-                                <div class="pid_mode" data-i18n="pidTuning_Altitude"></div>
-                            </th>
-                        </tr>
-                        <tr class="ALT" data-pid-bank-position="3">
-                            <!-- 3 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
-                            <td></td>
-                        </tr>
-                        <tr class="Vario" data-pid-bank-position="9">
-                            <!-- 9 -->
-                            <td>VEL</td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
-                            <td></td>
-                        </tr>
-                    </table>
-                    <table id="pid_mag" class="pid_tuning">
-                        <tr>
-                            <th colspan="5">
-                                <div class="pid_mode" data-i18n="pidTuning_Mag"></div>
-                            </th>
-                        </tr>
-                        <tr class="MAG" data-pid-bank-position="8">
-                            <!-- 8 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                        <tr class="HEADING" data-pid-bank-position="10" style="display:none">
-                            <!-- 8 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
-                            <td></td>
-                        </tr>
-                    </table>
-                    <table id="pid_gps" class="pid_tuning" style="display:none">
-                        <tr>
-                            <th colspan="5">
-                                <div class="pid_mode" data-i18n="pidTuning_GPS"></div>
-                            </th>
-                        </tr>
-                        <tr class="Pos" data-pid-bank-position="4">
-                            <!-- 4 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                        <tr class="PosR" data-pid-bank-position="5">
-                            <!-- 5 -->
-                            <td></td>
-                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
-                            <td><input class="controlProfileHighlight" type="number" name="ff" step="1" min="0" max="255" /></td>
-                        </tr>
-                        <tr class="NavR" data-pid-bank-position="6">
-                            <!-- 6 -->
-                            <td></td>
-                            <td><input type="number" name="p" step="1" min="0" max="255" /></td>
-                            <td><input type="number" name="i" step="1" min="0" max="255" /></td>
-                            <td><input type="number" name="d" step="1" min="0" max="255" /></td>
-                            <td></td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="gui_box grey topspacer">
-                    <table id="pid_accel" class="pid_tuning">
+                    <!-- Angle Mode PIDs: Roll, Pitch, Yaw -->
+                    <table id="pid_angle" class="pid_tuning">
                         <tr>
                             <th colspan="4">
-                                <div class="pid_mode borderleft">
-                                    <div class="textleft">
-                                        <div class="pidTuningLevel" data-i18n="pidTuning_Level"></div>
-                                        <div class="helpicon cf_tip" data-i18n_title="pidTuning_LevelHelp"></div>
-                                    </div>
-                                    <div class="pids" data-i18n="pidTuning_LevelP"></div>
-                                    <div class="pids" data-i18n="pidTuning_LevelI"></div>
-                                    <div class="pids" data-i18n="pidTuning_LevelD"></div>
-                                </div>
+                                <div class="pid_mode">Angle Mode</div>
+                            </th>
+                        </tr>
+                        <tr class="ROLL" data-pid-bank-position="0">
+                            <td></td>
+                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
+                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
+                            <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
+                        </tr>
+                        <tr class="PITCH" data-pid-bank-position="1">
+                            <td></td>
+                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
+                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
+                            <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
+                        </tr>
+                        <tr class="YAW" data-pid-bank-position="2">
+                            <td></td>
+                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
+                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
+                            <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
+                        </tr>
+                    </table>
+                    <!-- Rate Mode PIDs: Roll/Pitch (mirrored) -->
+                    <table id="pid_rate" class="pid_tuning">
+                        <tr>
+                            <th colspan="4">
+                                <div class="pid_mode">Rate Mode</div>
                             </th>
                         </tr>
                         <tr class="LEVEL" data-pid-bank-position="7">
-                            <!-- 7 -->
                             <td></td>
                             <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
                             <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
                             <td><input class="controlProfileHighlight" type="number" name="d" step="1" min="0" max="255" /></td>
+                        </tr>
+                    </table>
+                    <!-- Loop Damping: B_loop_roll (P) and B_loop_pitch (I) -->
+                    <table id="pid_damping" class="pid_tuning">
+                        <tr>
+                            <th colspan="4">
+                                <div class="pid_mode">Loop Damping</div>
+                            </th>
+                        </tr>
+                        <tr class="MAG" data-pid-bank-position="8">
+                            <td></td>
+                            <td><input class="controlProfileHighlight" type="number" name="p" step="1" min="0" max="255" /></td>
+                            <td><input class="controlProfileHighlight" type="number" name="i" step="1" min="0" max="255" /></td>
+                            <td></td>
                         </tr>
                     </table>
                 </div>

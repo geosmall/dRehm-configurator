@@ -3,9 +3,9 @@
     "minimum_chrome_version": "38",
     "version": "7.1.1",
     "author": "Several",
-    "name": "INAV - Configurator",
-    "short_name": "INAV",
-    "description": "Crossplatform configuration tool for INAVFlight flight control system",
+    "name": "dRehmFlight Configurator",
+    "short_name": "dRehmFlight",
+    "description": "Configuration tool for dRehmFlight flight controller firmware",
 
     "offline_enabled": true,
 
@@ -54,6 +54,6 @@
     ],
 
     "icons": {
-        "128": "images/inav_icon_128.png"
+        "128": "images/drehm_icon_128.png"
     }
 }

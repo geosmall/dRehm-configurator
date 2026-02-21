@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+     viewBox="0 0 460 68" xml:space="preserve">
+<style type="text/css">
+    .logo-text { fill: #FFFFFF; font-family: Arial, Helvetica, sans-serif; }
+    .logo-accent { fill: #e60000; font-family: Arial, Helvetica, sans-serif; }
+    .jet { fill: #FFFFFF; }
+</style>
+<!-- Jet silhouette (traced from dRehmFlight logo via potrace) -->
+<g class="jet" transform="translate(-3, 66) scale(0.035, -0.035)">
+    <path d="M588 1822 l-26 -27 6 -152 c5 -172 11 -161 -77 -142 -48 10 -91 1 -91 -19 0 -4 39 -29 86 -57 74 -44 84 -53 82 -75 -2 -15 -8 -24 -17 -22 -64 13 -431 72 -452 72 -20 0 -36 -11 -58 -37 -17 -21 -31 -42 -31 -48 0 -5 64 -44 143 -85 78 -41 152 -85 165 -98 l23 -22 -22 -38 c-12 -20 -36 -55 -52 -76 l-31 -39 32 -58 32 -57 -31 -74 c-67 -159 -14 -257 97 -182 21 15 72 56 112 93 122 109 114 105 160 82 38 -19 40 -19 69 -1 33 20 80 75 142 167 23 35 54 69 69 77 20 10 99 17 277 25 137 6 252 14 255 18 18 22 42 95 34 103 -11 11 -171 43 -334 66 -69 9 -126 18 -128 19 -1 2 2 14 9 28 12 27 29 31 196 43 70 5 96 11 109 25 19 21 22 20 -164 43 -63 8 -115 16 -117 18 -3 2 25 82 60 177 36 95 65 175 65 179 0 19 -35 -50 -96 -192 -70 -162 -83 -180 -140 -192 -28 -5 -32 -2 -44 26 -17 41 -52 64 -88 57 -28 -5 -131 11 -145 22 -4 4 -16 89 -26 189 -10 101 -20 185 -23 187 -2 3 -16 -8 -30 -23z"/>
+</g>
+<!-- "dRehmFlight" text -->
+<text class="logo-text" x="55" y="50" font-size="44" font-weight="bold" letter-spacing="-0.5">dRehmFlight</text>
+<!-- "VTOL" accent in red -->
+<text class="logo-accent" x="322" y="50" font-size="44" font-weight="900" letter-spacing="1">VTOL</text>
+</svg>
