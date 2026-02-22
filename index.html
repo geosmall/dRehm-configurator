@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dRehmFlight Configurator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#1a1a1e">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="logo">
+        <svg class="logo-jet" viewBox="0 0 75 68" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#ffffff" transform="translate(-3, 66) scale(0.035, -0.035)">
+            <path d="M588 1822 l-26 -27 6 -152 c5 -172 11 -161 -77 -142 -48 10 -91 1 -91 -19 0 -4 39 -29 86 -57 74 -44 84 -53 82 -75 -2 -15 -8 -24 -17 -22 -64 13 -431 72 -452 72 -20 0 -36 -11 -58 -37 -17 -21 -31 -42 -31 -48 0 -5 64 -44 143 -85 78 -41 152 -85 165 -98 l23 -22 -22 -38 c-12 -20 -36 -55 -52 -76 l-31 -39 32 -58 32 -57 -31 -74 c-67 -159 -14 -257 97 -182 21 15 72 56 112 93 122 109 114 105 160 82 38 -19 40 -19 69 -1 33 20 80 75 142 167 23 35 54 69 69 77 20 10 99 17 277 25 137 6 252 14 255 18 18 22 42 95 34 103 -11 11 -171 43 -334 66 -69 9 -126 18 -128 19 -1 2 2 14 9 28 12 27 29 31 196 43 70 5 96 11 109 25 19 21 22 20 -164 43 -63 8 -115 16 -117 18 -3 2 25 82 60 177 36 95 65 175 65 179 0 19 -35 -50 -96 -192 -70 -162 -83 -180 -140 -192 -28 -5 -32 -2 -44 26 -17 41 -52 64 -88 57 -28 -5 -131 11 -145 22 -4 4 -16 89 -26 189 -10 101 -20 185 -23 187 -2 3 -16 -8 -30 -23z"/>
+          </g>
+        </svg>
+        <span class="logo-name">dRehmFlight</span><span class="logo-vtol">VTOL</span>
+      </div>
+      <div class="header-sub">
+        <span class="sub-label">CONFIGURATOR</span>
+        <span id="fc-info" class="fc-info"></span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="conn-status" class="conn-badge disconnected">Disconnected</span>
+      <select id="port-select" class="port-select">
+        <option value="new">No ports found</option>
+      </select>
+      <button id="btn-connect" class="btn-connect">Connect</button>
+    </div>
+  </header>
+
+  <!-- Main layout: sidebar + content -->
+  <div class="app-body">
+    <nav id="sidebar" class="sidebar hidden">
+      <button class="tab active" data-tab="status">Status</button>
+      <button class="tab" data-tab="receiver">Receiver</button>
+      <button class="tab" data-tab="sensors">Sensors</button>
+      <button class="tab" data-tab="terminal">CLI</button>
+    </nav>
+
+    <main>
+      <!-- Status Tab -->
+      <section id="tab-status" class="tab-content active">
+        <div class="panel">
+          <div class="panel-title">Flight Controller Status</div>
+          <div class="status-grid">
+            <div class="status-item">
+              <label>Armed</label>
+              <span id="val-armed" class="val">--</span>
+            </div>
+            <div class="status-item">
+              <label>Cycle Time</label>
+              <span id="val-cycletime" class="val">--</span>
+            </div>
+            <div class="status-item">
+              <label>CPU Load</label>
+              <span id="val-cpuload" class="val">--</span>
+            </div>
+            <div class="status-item">
+              <label>Sensors</label>
+              <span id="val-sensors" class="val">--</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Attitude</div>
+          <div class="status-grid">
+            <div class="status-item">
+              <label>Roll</label>
+              <span id="val-roll" class="val">--</span>
+            </div>
+            <div class="status-item">
+              <label>Pitch</label>
+              <span id="val-pitch" class="val">--</span>
+            </div>
+            <div class="status-item">
+              <label>Yaw</label>
+              <span id="val-yaw" class="val">--</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Analog</div>
+          <div class="status-grid">
+            <div class="status-item">
+              <label>Battery</label>
+              <span id="val-vbat" class="val">--</span>
+            </div>
+            <div class="status-item">
+              <label>RSSI</label>
+              <span id="val-rssi" class="val">--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Receiver Tab -->
+      <section id="tab-receiver" class="tab-content">
+        <div class="panel">
+          <div class="panel-title">RC Channels</div>
+          <div class="channel-list">
+            <div class="channel-row">
+              <span class="ch-name">Roll</span>
+              <div class="ch-bar"><div class="ch-center"></div><div class="ch-fill ch-1" id="rc-fill-0"></div></div>
+              <span class="ch-value" id="rc-val-0">--</span>
+            </div>
+            <div class="channel-row">
+              <span class="ch-name">Pitch</span>
+              <div class="ch-bar"><div class="ch-center"></div><div class="ch-fill ch-2" id="rc-fill-1"></div></div>
+              <span class="ch-value" id="rc-val-1">--</span>
+            </div>
+            <div class="channel-row">
+              <span class="ch-name">Throttle</span>
+              <div class="ch-bar"><div class="ch-center"></div><div class="ch-fill ch-3" id="rc-fill-2"></div></div>
+              <span class="ch-value" id="rc-val-2">--</span>
+            </div>
+            <div class="channel-row">
+              <span class="ch-name">Yaw</span>
+              <div class="ch-bar"><div class="ch-center"></div><div class="ch-fill ch-4" id="rc-fill-3"></div></div>
+              <span class="ch-value" id="rc-val-3">--</span>
+            </div>
+            <div class="channel-row">
+              <span class="ch-name">AUX1</span>
+              <div class="ch-bar"><div class="ch-center"></div><div class="ch-fill ch-5" id="rc-fill-4"></div></div>
+              <span class="ch-value" id="rc-val-4">--</span>
+            </div>
+            <div class="channel-row">
+              <span class="ch-name">AUX2</span>
+              <div class="ch-bar"><div class="ch-center"></div><div class="ch-fill ch-6" id="rc-fill-5"></div></div>
+              <span class="ch-value" id="rc-val-5">--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sensors Tab -->
+      <section id="tab-sensors" class="tab-content">
+        <div class="sensor-toolbar">
+          <div class="sensor-subtabs">
+            <button class="sensor-subtab active" data-view="graphs">Graph</button>
+            <button class="sensor-subtab" data-view="values">Values</button>
+          </div>
+          <div id="sensor-refresh-row" class="sensor-refresh-row">
+            <span class="graph-scale-label">Refresh:</span>
+            <select id="sensor-refresh" class="graph-scale-select">
+              <option value="50">50 ms</option>
+              <option value="100" selected>100 ms</option>
+              <option value="250">250 ms</option>
+              <option value="500">500 ms</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Graph view (default) -->
+        <div id="sensors-graphs">
+          <div class="panel graph-panel">
+            <div class="panel-title">Gyroscope (&deg;/s)</div>
+            <div class="graph-row">
+              <canvas id="graph-gyro" class="sensor-canvas"></canvas>
+              <div class="graph-sidebar">
+                <div class="graph-scale-row">
+                  <span class="graph-scale-label">Scale:</span>
+                  <select id="scale-gyro" class="graph-scale-select">
+                    <option value="250">250</option>
+                    <option value="500" selected>500</option>
+                    <option value="1000">1000</option>
+                    <option value="2000">2000</option>
+                  </select>
+                </div>
+                <div class="graph-val"><span class="legend-x">X:</span> <span id="gv-gyro-x">--</span></div>
+                <div class="graph-val"><span class="legend-y">Y:</span> <span id="gv-gyro-y">--</span></div>
+                <div class="graph-val"><span class="legend-z">Z:</span> <span id="gv-gyro-z">--</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel graph-panel">
+            <div class="panel-title">Accelerometer (g)</div>
+            <div class="graph-row">
+              <canvas id="graph-acc" class="sensor-canvas"></canvas>
+              <div class="graph-sidebar">
+                <div class="graph-scale-row">
+                  <span class="graph-scale-label">Scale:</span>
+                  <select id="scale-acc" class="graph-scale-select">
+                    <option value="2">2</option>
+                    <option value="4" selected>4</option>
+                    <option value="8">8</option>
+                    <option value="16">16</option>
+                  </select>
+                </div>
+                <div class="graph-val"><span class="legend-x">X:</span> <span id="gv-acc-x">--</span></div>
+                <div class="graph-val"><span class="legend-y">Y:</span> <span id="gv-acc-y">--</span></div>
+                <div class="graph-val"><span class="legend-z">Z:</span> <span id="gv-acc-z">--</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel graph-panel">
+            <div class="panel-title">Magnetometer</div>
+            <div class="graph-row">
+              <canvas id="graph-mag" class="sensor-canvas"></canvas>
+              <div class="graph-sidebar">
+                <div class="graph-scale-row">
+                  <span class="graph-scale-label">Scale:</span>
+                  <select id="scale-mag" class="graph-scale-select">
+                    <option value="500">500</option>
+                    <option value="1000" selected>1000</option>
+                    <option value="2000">2000</option>
+                    <option value="4000">4000</option>
+                  </select>
+                </div>
+                <div class="graph-val"><span class="legend-x">X:</span> <span id="gv-mag-x">--</span></div>
+                <div class="graph-val"><span class="legend-y">Y:</span> <span id="gv-mag-y">--</span></div>
+                <div class="graph-val"><span class="legend-z">Z:</span> <span id="gv-mag-z">--</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Values view -->
+        <div id="sensors-values" class="hidden">
+          <div class="panel">
+            <div class="panel-title">Gyroscope</div>
+            <div class="sensor-axes">
+              <div class="sensor-axis">
+                <label>X</label>
+                <span class="val" id="imu-gyro-x">--</span>
+                <span class="unit">&deg;/s</span>
+              </div>
+              <div class="sensor-axis">
+                <label>Y</label>
+                <span class="val" id="imu-gyro-y">--</span>
+                <span class="unit">&deg;/s</span>
+              </div>
+              <div class="sensor-axis">
+                <label>Z</label>
+                <span class="val" id="imu-gyro-z">--</span>
+                <span class="unit">&deg;/s</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Accelerometer</div>
+            <div class="sensor-axes">
+              <div class="sensor-axis">
+                <label>X</label>
+                <span class="val" id="imu-acc-x">--</span>
+                <span class="unit">g</span>
+              </div>
+              <div class="sensor-axis">
+                <label>Y</label>
+                <span class="val" id="imu-acc-y">--</span>
+                <span class="unit">g</span>
+              </div>
+              <div class="sensor-axis">
+                <label>Z</label>
+                <span class="val" id="imu-acc-z">--</span>
+                <span class="unit">g</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Magnetometer</div>
+            <div class="sensor-axes">
+              <div class="sensor-axis">
+                <label>X</label>
+                <span class="val" id="imu-mag-x">--</span>
+              </div>
+              <div class="sensor-axis">
+                <label>Y</label>
+                <span class="val" id="imu-mag-y">--</span>
+              </div>
+              <div class="sensor-axis">
+                <label>Z</label>
+                <span class="val" id="imu-mag-z">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Terminal Tab -->
+      <section id="tab-terminal" class="tab-content">
+        <div class="panel terminal-panel">
+          <div class="panel-title">CLI <button id="btn-clear-term" class="btn-clear-term" title="Clear output">Clear</button></div>
+          <div class="terminal">
+            <div id="term-output" class="terminal-output"></div>
+            <div class="terminal-input-row">
+              <span class="terminal-prompt">#</span>
+              <input id="term-input" class="terminal-input" type="text"
+                     placeholder="Type command..." autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+        </div>
+        <div class="panel settings-panel">
+          <div class="panel-title">Settings</div>
+          <div class="settings-toolbar">
+            <button id="btn-load-settings" class="btn-settings">Load</button>
+            <button id="btn-save-settings" class="btn-settings btn-save">Save</button>
+            <button id="btn-defaults-settings" class="btn-settings">Defaults</button>
+          </div>
+          <div id="settings-form" class="settings-form">
+            <div class="settings-empty">Click Load to read settings from flight controller</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Status Bar -->
+  <footer id="status-bar" class="status-bar hidden">
+    <span>Armed: <strong id="bar-armed">--</strong></span>
+    <span class="sep">|</span>
+    <span>Cycle: <strong id="bar-cycle">--</strong></span>
+    <span class="sep">|</span>
+    <span>CPU: <strong id="bar-cpu">--</strong></span>
+    <span class="sep">|</span>
+    <span>Sensors: <strong id="bar-sensors">--</strong></span>
+    <span class="spacer"></span>
+    <span id="bar-version"></span>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>
