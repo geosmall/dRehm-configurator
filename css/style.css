@@ -56,15 +56,15 @@ header {
 .logo {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 1.4rem;
+  gap: 8px;
+  font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
 
 .logo-jet {
-  width: 45px;
-  height: 40px;
+  width: 56px;
+  height: 50px;
 }
 
 .logo-name {
@@ -82,7 +82,7 @@ header {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
