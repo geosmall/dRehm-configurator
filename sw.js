@@ -6,7 +6,7 @@
  * falling back to network. Bump CACHE_VERSION to force update.
  */
 
-const CACHE_VERSION = 'drehm-v1';
+const CACHE_VERSION = 'drehm-v2';
 
 const APP_SHELL = [
   './',
@@ -23,6 +23,8 @@ const APP_SHELL = [
   './js/tabs/terminal.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/favicon-32.png',
+  './icons/favicon-16.png',
 ];
 
 // Install: pre-cache app shell

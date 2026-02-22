@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icons/banner.png" alt="dRehmFlight VTOL Configurator">
+  <img src="icons/banner.svg" alt="dRehmFlight VTOL Configurator">
 </p>
 
 <p align="center">
