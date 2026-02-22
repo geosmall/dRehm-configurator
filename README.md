@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="icons/icon-192.png" alt="dRehmFlight" width="96">
+  <img src="icons/banner.png" alt="dRehmFlight VTOL Configurator">
 </p>
-
-<h1 align="center">dRehmFlight Configurator</h1>
 
 <p align="center">
   A lightweight PWA for configuring <a href="https://github.com/nickrehm/dRehmFlight">dRehmFlight VTOL</a> flight controllers via Web Serial.
