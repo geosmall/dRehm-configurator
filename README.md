@@ -24,7 +24,7 @@
 
 - **Browser**: Chrome or Edge (Web Serial API)
 - **Firmware**: dRehmFlight STM32 1.3b with MSP V1 + CLI support
-- **Connection**: USB serial at 115,200 baud
+- **Connection**: USB serial at 115,200 baud, or BLE UART bridge (planned)
 
 ## Usage
 
@@ -45,6 +45,13 @@ Vanilla JS + ES modules, no build step, no dependencies. Communicates with the f
 | CLI (text) | PWA → FC | Parameter tuning, flash management, settings |
 
 Mode switching: `#` enters CLI mode, `exit` returns to MSP telemetry.
+
+### Connectivity
+
+| Transport | Platform | Status |
+|-----------|----------|--------|
+| Web Serial (USB) | Chrome/Edge desktop | Supported |
+| Web Bluetooth (BLE) | Chrome for Android + BLE UART bridge | Planned |
 
 ## Development
 
