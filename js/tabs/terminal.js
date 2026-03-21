@@ -10,23 +10,8 @@
 import { sendCommand, setCliReceiver } from '../cli.js';
 import { sleep } from '../util.js';
 
-/** Parameter groups (matches firmware paramTable order) */
-const PARAM_GROUPS = [
-  { name: 'PID \u2014 Angle Mode', params: [
-    'Kp_roll_angle', 'Ki_roll_angle', 'Kd_roll_angle',
-    'Kp_pitch_angle', 'Ki_pitch_angle', 'Kd_pitch_angle'] },
-  { name: 'PID \u2014 Yaw', params: [
-    'Kp_yaw', 'Ki_yaw', 'Kd_yaw'] },
-  { name: 'PID \u2014 Rate Mode', params: [
-    'Kp_roll_rate', 'Ki_roll_rate', 'Kd_roll_rate',
-    'Kp_pitch_rate', 'Ki_pitch_rate', 'Kd_pitch_rate'] },
-  { name: 'Loop Damping', params: [
-    'B_loop_roll', 'B_loop_pitch'] },
-  { name: 'Controller Limits', params: [
-    'i_limit', 'maxRoll', 'maxPitch', 'maxYaw'] },
-  { name: 'Filter Coefficients', params: [
-    'B_madgwick', 'B_accel', 'B_gyro', 'B_mag'] },
-];
+/** Param metadata from firmware: name → { min, max, group } */
+const paramMeta = new Map();
 
 /** Command history */
 const history = [];
@@ -57,6 +42,33 @@ let preserveOriginalsOnLoad = false;
 /** When true, suppress terminal output during load */
 let silentLoad = false;
 
+/** Parse INI text (key=value lines, skipping sections/comments) */
+function parseIniText(text) {
+  const params = new Map();
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('[') || trimmed.startsWith('#') || trimmed.startsWith(';')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx < 0) continue;
+    const name = trimmed.substring(0, eqIdx).trim();
+    const value = trimmed.substring(eqIdx + 1).trim();
+    if (name && value) params.set(name, value);
+  }
+  return params;
+}
+
+/** Parse enriched `set` output: "name = value [min:max] {group}" */
+function parseSetOutput(text) {
+  const params = new Map();
+  for (const line of text.split('\n')) {
+    const m = line.match(/^(\S+)\s*=\s*(\S+)\s*\[([^:]+):([^\]]+)\]\s*\{([^}]+)\}/);
+    if (m) {
+      params.set(m[1], { value: m[2], min: parseFloat(m[3]), max: parseFloat(m[4]), group: m[5].trim() });
+    }
+  }
+  return params;
+}
+
 /**
  * Initialize terminal tab. Called from app.js on connect.
  * Event listeners are added only once; serial ref is updated each connect.
@@ -83,6 +95,14 @@ export function initTerminal(serialRef) {
   document.getElementById('btn-defaults-settings').addEventListener('click', loadDefaults);
   document.getElementById('btn-clear-term').addEventListener('click', () => {
     if (termOutput) termOutput.textContent = '';
+  });
+  document.getElementById('btn-export-ini').addEventListener('click', exportIni);
+  document.getElementById('btn-import-ini').addEventListener('click', () => {
+    document.getElementById('ini-file-input').click();
+  });
+  document.getElementById('ini-file-input').addEventListener('change', (e) => {
+    if (e.target.files[0]) importIni(e.target.files[0]);
+    e.target.value = '';  // allow re-import of same file
   });
 }
 
@@ -206,18 +226,14 @@ function finishCapture() {
     content = content.substring(echoEnd + 1);
   }
 
-  // Parse "name = value" lines into a Map
+  // Parse enriched "name = value [min:max] {group}" lines
+  const parsed = parseSetOutput(content);
+
+  // Store metadata and extract plain name→value map
   const params = new Map();
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx < 0) continue;
-    const name = trimmed.substring(0, eqIdx).trim();
-    const value = trimmed.substring(eqIdx + 1).trim();
-    if (name && value) {
-      params.set(name, value);
-    }
+  for (const [name, meta] of parsed) {
+    paramMeta.set(name, { min: meta.min, max: meta.max, group: meta.group });
+    params.set(name, meta.value);
   }
 
   if (params.size > 0) {
@@ -242,45 +258,28 @@ function renderForm(params) {
   preserveOriginalsOnLoad = false;
 
   settingsForm.innerHTML = '';
-  const placed = new Set();
 
-  // Render defined groups
-  for (const group of PARAM_GROUPS) {
-    const groupParams = group.params.filter(p => params.has(p));
-    if (groupParams.length === 0) continue;
-
-    const groupEl = document.createElement('div');
-    groupEl.className = 'settings-group';
-
-    const titleEl = document.createElement('div');
-    titleEl.className = 'settings-group-title';
-    titleEl.textContent = group.name;
-    groupEl.appendChild(titleEl);
-
-    for (const name of groupParams) {
-      groupEl.appendChild(createParamRow(name, params.get(name)));
-      placed.add(name);
-    }
-
-    settingsForm.appendChild(groupEl);
-  }
-
-  // Render any unknown params in an "Other" group
-  const other = [];
+  // Group params by firmware metadata (preserves paramTable order)
+  const groups = new Map();  // group name → [[name, value], ...]
   for (const [name, value] of params) {
-    if (!placed.has(name)) other.push([name, value]);
+    const meta = paramMeta.get(name);
+    const groupName = meta ? meta.group : 'Other';
+    if (!groups.has(groupName)) groups.set(groupName, []);
+    groups.get(groupName).push([name, value]);
   }
-  if (other.length > 0) {
+
+  for (const [groupName, entries] of groups) {
     const groupEl = document.createElement('div');
     groupEl.className = 'settings-group';
 
     const titleEl = document.createElement('div');
     titleEl.className = 'settings-group-title';
-    titleEl.textContent = 'Other';
+    titleEl.textContent = groupName;
     groupEl.appendChild(titleEl);
 
-    for (const [name, value] of other) {
-      groupEl.appendChild(createParamRow(name, value));
+    for (const [name, value] of entries) {
+      const meta = paramMeta.get(name);
+      groupEl.appendChild(createParamRow(name, value, meta?.min, meta?.max));
     }
 
     settingsForm.appendChild(groupEl);
@@ -289,8 +288,8 @@ function renderForm(params) {
   updateSaveButton();
 }
 
-/** Create a single param row: label + number input */
-function createParamRow(name, value) {
+/** Create a single param row: label + number input with optional min/max */
+function createParamRow(name, value, min, max) {
   const row = document.createElement('div');
   row.className = 'param-row';
 
@@ -304,6 +303,8 @@ function createParamRow(name, value) {
   input.className = 'param-input';
   input.dataset.param = name;
   input.value = value;
+  if (min != null) input.min = min;
+  if (max != null) input.max = max;
   input.addEventListener('input', () => onParamInput(row, input));
 
   row.appendChild(label);
@@ -370,6 +371,64 @@ async function saveSettings() {
     input.closest('.param-row').classList.remove('dirty');
   }
   updateSaveButton();
+}
+
+/** Collect current form values as a Map */
+function getFormParams() {
+  const params = new Map();
+  if (!settingsForm) return params;
+  for (const input of settingsForm.querySelectorAll('.param-input')) {
+    params.set(input.dataset.param, input.value);
+  }
+  return params;
+}
+
+/** Export current form values as .ini file download */
+function exportIni() {
+  const inputs = settingsForm?.querySelectorAll('.param-input');
+  if (!inputs || inputs.length === 0) {
+    appendOutput('[No settings to export \u2014 Load first]\r\n');
+    return;
+  }
+  let text = '[pid]\n';
+  for (const input of inputs) {
+    text += `${input.dataset.param}=${input.value}\n`;
+  }
+  // Generate filename from board name if available
+  const info = document.getElementById('fc-info')?.textContent || '';
+  const parts = info.split('|').map(s => s.trim());
+  const board = parts.length >= 3 ? parts[2] : '';
+  const filename = board ? `${board}_config.ini` : 'config.ini';
+  // Trigger download
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  appendOutput(`[Exported ${inputs.length} parameters to ${filename}]\r\n`);
+}
+
+/** Import .ini file and merge into form */
+function importIni(file) {
+  file.text().then(text => {
+    const fileParams = parseIniText(text);
+    if (fileParams.size === 0) {
+      appendOutput(`[No parameters found in ${file.name}]\r\n`);
+      return;
+    }
+    // Merge with current form values (file wins on conflicts)
+    const current = getFormParams();
+    if (current.size > 0) {
+      for (const [name, value] of fileParams) current.set(name, value);
+      preserveOriginalsOnLoad = true;  // keep FC originals for dirty tracking
+      renderForm(current);
+    } else {
+      renderForm(fileParams);  // file values become originals
+    }
+    appendOutput(`[Imported ${fileParams.size} parameters from ${file.name}]\r\n`);
+  });
 }
 
 /** Load defaults: reset params on FC (RAM only), then reload form */

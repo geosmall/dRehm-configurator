@@ -653,6 +653,14 @@ main {
   margin-bottom: 10px;
 }
 
+.toolbar-sep {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
 .btn-settings {
   background: var(--bg-content);
   color: var(--text);
