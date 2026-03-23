@@ -94,6 +94,10 @@ btnConnect.addEventListener('click', async () => {
 });
 
 function onConnect() {
+  // Clear stale state from any prior connection (BF/INAV pattern)
+  parser.reset();
+  cliReset();
+
   btnConnect.textContent = 'Disconnect';
   connStatus.textContent = 'Connected';
   connStatus.classList.remove('disconnected');
@@ -307,6 +311,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     const target = tab.dataset.tab;
     if (target === activeTab) return;
 
+    const prevTab = activeTab;
     const wasTerminal = activeTab === 'terminal';
     const goingToTerminal = target === 'terminal';
 
@@ -324,7 +329,12 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (goingToTerminal && serial.connected) {
       stopPolling();
       onTerminalActivate();  // Set auto-load flag before CLI entry so banner prompt triggers it
-      await enterCli(serial, switchToCli);
+      const ok = await enterCli(serial, switchToCli, switchToMsp);
+      if (!ok) {
+        activateTab(prevTab);
+        startPolling();
+        return;
+      }
     }
 
     // Switching between non-terminal tabs → restart polling at correct rate

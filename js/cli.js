@@ -3,7 +3,7 @@
  * @brief CLI mode switching protocol for dRehmFlight PWA Configurator
  *
  * Manages transitions between MSP (binary telemetry) and CLI (text command) modes.
- * Protocol: send '#' to enter CLI, send 'exit\r\n' to exit back to MSP.
+ * Protocol: send '#' to enter CLI, send 'exit\r\n' to reboot FC (BF/INAV pattern).
  */
 
 import { sleep } from './util.js';
@@ -20,13 +20,35 @@ const decoder = new TextDecoder();
 /** Text encoder for outgoing commands */
 const encoder = new TextEncoder();
 
+/** Banner validation state */
+let bannerResolve = null;
+let bannerTimer = null;
+
+function waitForBanner(timeoutMs) {
+  return new Promise(resolve => {
+    bannerResolve = resolve;
+    bannerTimer = setTimeout(() => {
+      bannerResolve = null;
+      bannerTimer = null;
+      resolve(false);
+    }, timeoutMs);
+  });
+}
+
 /**
  * Feed raw bytes from serial while in CLI mode.
- * Decodes to text and dispatches to callback.
+ * Decodes to text, validates CLI banner if pending, dispatches to callback.
  */
 export function cliParse(data) {
   if (!inCliMode) return;
   const text = decoder.decode(data, { stream: true });
+  if (bannerResolve && text.includes('CLI')) {
+    const r = bannerResolve;
+    clearTimeout(bannerTimer);
+    bannerResolve = null;
+    bannerTimer = null;
+    r(true);
+  }
   if (onTextReceive) onTextReceive(text);
 }
 
@@ -39,16 +61,29 @@ export function setCliReceiver(cb) {
 }
 
 /**
- * Enter CLI mode: switch serial receiver, send '#' trigger.
+ * Enter CLI mode: drain in-flight MSP, send '#', validate banner.
  * @param {Serial} serial - Serial port instance
- * @param {function} switchReceiver - Switches serial.onReceive to cliParse
+ * @param {function} switchToCli - Switches serial.onReceive to cliParse
+ * @param {function} switchToMsp - Restores serial.onReceive to MSP parser (on failure)
+ * @returns {Promise<boolean>} true if CLI banner received, false on timeout
  */
-export async function enterCli(serial, switchReceiver) {
-  if (inCliMode) return;
+export async function enterCli(serial, switchToCli, switchToMsp) {
+  if (inCliMode) return true;
+
+  // Drain: wait for in-flight MSP responses to arrive
+  await sleep(150);
+
   inCliMode = true;
-  switchReceiver();
+  switchToCli();
   await serial.write(new Uint8Array([0x23]));  // '#'
-  await sleep(100);
+
+  // Wait for CLI banner (up to 500 ms — includes 100 ms FW guard timer)
+  const validated = await waitForBanner(500);
+  if (!validated) {
+    inCliMode = false;
+    switchToMsp();
+  }
+  return validated;
 }
 
 /**
@@ -76,4 +111,10 @@ export async function sendCommand(serial, cmd) {
 /** Reset CLI state (e.g. on disconnect) */
 export function cliReset() {
   inCliMode = false;
+  if (bannerResolve) {
+    clearTimeout(bannerTimer);
+    bannerResolve(false);
+    bannerResolve = null;
+    bannerTimer = null;
+  }
 }
