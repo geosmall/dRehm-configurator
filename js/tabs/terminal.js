@@ -152,6 +152,7 @@ function appendOutput(text) {
 
 /** Handle keydown in terminal input */
 function onInputKey(e) {
+  if (capturing) return;  // Block input during settings load
   if (e.key === 'Enter') {
     const cmd = termInput.value.trim();
     termInput.value = '';
@@ -341,7 +342,7 @@ function getDirtyCount() {
 
 /** Save settings: send `set name value` for changed params, then `save` */
 async function saveSettings() {
-  if (!settingsForm) return;
+  if (!settingsForm || capturing) return;
 
   const changed = [];
   for (const input of settingsForm.querySelectorAll('.param-input')) {

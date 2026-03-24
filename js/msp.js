@@ -133,7 +133,11 @@ export class MspParser {
         if ((this.checksum & 0xFF) === c) {
           this._resolveRequest(this.cmd);
           if (this.onMessage) {
-            this.onMessage({ cmd: this.cmd, payload: this.payload });
+            try {
+              this.onMessage({ cmd: this.cmd, payload: this.payload });
+            } catch (e) {
+              console.error('MSP handler error:', e);
+            }
           }
         }
         break;

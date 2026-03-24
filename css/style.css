@@ -185,8 +185,13 @@ header {
   transition: background 0.15s;
 }
 
-.btn-connect:hover {
+.btn-connect:hover:not(:disabled) {
   background: var(--red-bright);
+}
+
+.btn-connect:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ─── App body: sidebar + content ─── */

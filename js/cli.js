@@ -89,7 +89,13 @@ export async function enterCli(serial, switchToCli, switchToMsp) {
 
   inCliMode = true;
   switchToCli();
-  await serial.write(new Uint8Array([0x23]));  // '#'
+  try {
+    await serial.write(new Uint8Array([0x23]));  // '#'
+  } catch {
+    inCliMode = false;
+    switchToMsp();
+    return false;
+  }
 
   // Wait for CLI banner (up to 500 ms — includes 100 ms FW guard timer)
   const validated = await waitForBanner(500);
@@ -119,7 +125,11 @@ export async function exitCli(serial, switchReceiver) {
  * @param {string} cmd - Command text
  */
 export async function sendCommand(serial, cmd) {
-  await serial.write(encoder.encode(cmd + '\r\n'));
+  try {
+    await serial.write(encoder.encode(cmd + '\r\n'));
+  } catch {
+    // Port closed — disconnect handler will clean up
+  }
 }
 
 /** Reset CLI state (e.g. on disconnect) */

@@ -74,6 +74,12 @@ refreshPortList();
 // --- Connection ---
 
 btnConnect.addEventListener('click', async () => {
+  if (btnConnect.disabled) return;
+  btnConnect.disabled = true;
+  try { await handleConnectClick(); } finally { btnConnect.disabled = false; }
+});
+
+async function handleConnectClick() {
   if (reconnecting) {
     // Cancel auto-reconnect wait
     serial.cancelWaitForPort();
@@ -107,9 +113,10 @@ btnConnect.addEventListener('click', async () => {
       refreshPortList();
     } catch (err) {
       console.error('Connect failed:', err);
+      connStatus.textContent = 'Connection failed';
     }
   }
-});
+}
 
 function onConnect() {
   // Clear stale state from any prior connection (BF/INAV pattern)
@@ -264,10 +271,11 @@ function handleMessage(msg) {
   // Status bar (always updated regardless of active tab)
   updateStatusBar(msg);
 
-  // Dispatch to all tab handlers (each filters by its own MSP codes)
-  handleStatusMessage(msg);
-  handleReceiverMessage(msg);
-  handleSensorsMessage(msg);
+  // Dispatch to all tab handlers (each filters by its own MSP codes).
+  // Individual try/catch so one handler failure doesn't block the others.
+  try { handleStatusMessage(msg); } catch (e) { console.error('Status handler:', e); }
+  try { handleReceiverMessage(msg); } catch (e) { console.error('Receiver handler:', e); }
+  try { handleSensorsMessage(msg); } catch (e) { console.error('Sensors handler:', e); }
 }
 
 function updateFcInfo() {
@@ -369,8 +377,12 @@ async function pollActiveTab() {
 
   for (const cmd of commands) {
     const frame = mspEncode(cmd);
-    parser.trackRequest(cmd, () => serial.write(frame));
-    await serial.write(frame);
+    parser.trackRequest(cmd, () => serial.write(frame).catch(() => {}));
+    try {
+      await serial.write(frame);
+    } catch {
+      return;  // Port closed — disconnect handler will clean up
+    }
   }
 }
 
