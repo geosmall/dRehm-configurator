@@ -20,6 +20,11 @@ let activeTab = 'status';
 let rebootPending = false;
 let reconnecting = false;
 
+// --- Link quality ---
+let lastMspResponseMs = 0;
+const LINK_STALE_MS = 2000;
+const LINK_DEAD_MS  = 5000;
+
 // --- FC identity (populated on connect) ---
 let fcVariant = '';
 let fcVersion = '';
@@ -110,6 +115,8 @@ function onConnect() {
   // Clear stale state from any prior connection (BF/INAV pattern)
   parser.reset();
   cliReset();
+  lastMspResponseMs = 0;
+  updateLinkIndicator('');
 
   btnConnect.textContent = 'Disconnect';
   connStatus.textContent = 'Connected';
@@ -231,6 +238,9 @@ async function queryIdentity() {
 // --- Message dispatch ---
 
 function handleMessage(msg) {
+  lastMspResponseMs = performance.now();
+  updateLinkIndicator('active');
+
   // Identity responses
   switch (msg.cmd) {
     case MSP.FC_VARIANT:
@@ -289,6 +299,17 @@ function updateStatusBar(msg) {
   setText('bar-sensors', sensorString(sensors));
 }
 
+/** Update link quality dot + label in status bar */
+function updateLinkIndicator(state) {
+  const el = document.getElementById('link-indicator');
+  if (!el) return;
+  el.className = 'link-indicator ' + state;
+  const label = el.querySelector('.link-label');
+  if (label) {
+    label.textContent = state === 'active' ? 'OK' : state === 'stale' ? 'Stale' : state === 'dead' ? 'Lost' : '--';
+  }
+}
+
 // --- Polling ---
 
 /** Get poll interval: sensors tab uses selectable refresh rate, others 250ms */
@@ -323,6 +344,13 @@ function restartPolling() {
 async function pollActiveTab() {
   if (!serial.connected) return;
 
+  // Link quality check
+  if (lastMspResponseMs > 0) {
+    const elapsed = performance.now() - lastMspResponseMs;
+    if (elapsed > LINK_DEAD_MS) updateLinkIndicator('dead');
+    else if (elapsed > LINK_STALE_MS) updateLinkIndicator('stale');
+  }
+
   // Always poll MSP_STATUS for the status bar
   const commands = [MSP.STATUS];
 
@@ -340,7 +368,9 @@ async function pollActiveTab() {
   }
 
   for (const cmd of commands) {
-    await serial.write(mspEncode(cmd));
+    const frame = mspEncode(cmd);
+    parser.trackRequest(cmd, () => serial.write(frame));
+    await serial.write(frame);
   }
 }
 
@@ -379,6 +409,7 @@ document.querySelectorAll('.tab').forEach(tab => {
       onTerminalDeactivate();
       await exitCli(serial, switchToMsp);
       parser.reset();
+      statusBar.classList.remove('stale');
       startPolling();
     }
 
@@ -387,6 +418,8 @@ document.querySelectorAll('.tab').forEach(tab => {
     // Entering terminal → stop MSP, enter CLI
     if (goingToTerminal && serial.connected) {
       stopPolling();
+      statusBar.classList.add('stale');
+      updateLinkIndicator('');
       onTerminalActivate();  // Set auto-load flag before CLI entry so banner prompt triggers it
       const ok = await enterCli(serial, switchToCli, switchToMsp);
       if (!ok) {

@@ -36,9 +36,12 @@ export class MspParser {
     this.checksum = 0;
     this.payload = [];
     this.payloadIdx = 0;
+    this.pending = [];
 
     /** Called with { cmd, payload: Uint8Array } on valid frame */
     this.onMessage = null;
+    /** Called with cmd code when request fails after retry */
+    this.onTimeout = null;
   }
 
   /** Feed raw bytes from serial into the parser */
@@ -48,9 +51,43 @@ export class MspParser {
     }
   }
 
-  /** Reset parser state */
+  /** Reset parser state and cancel pending requests */
   reset() {
     this.state = S_IDLE;
+    for (const p of this.pending) clearTimeout(p.timer);
+    this.pending = [];
+  }
+
+  /** Track an outgoing request for timeout/retry */
+  trackRequest(cmd, sendFn) {
+    const entry = {
+      cmd, retried: false, sendFn,
+      timer: setTimeout(() => this._onTimeout(entry), 1000),
+    };
+    this.pending.push(entry);
+  }
+
+  /** Remove oldest pending entry for cmd (called on valid response) */
+  _resolveRequest(cmd) {
+    const idx = this.pending.findIndex(p => p.cmd === cmd);
+    if (idx >= 0) {
+      clearTimeout(this.pending[idx].timer);
+      this.pending.splice(idx, 1);
+    }
+  }
+
+  /** Handle request timeout — retry once, then notify */
+  _onTimeout(entry) {
+    const idx = this.pending.indexOf(entry);
+    if (idx < 0) return;
+    if (!entry.retried) {
+      entry.retried = true;
+      entry.timer = setTimeout(() => this._onTimeout(entry), 1000);
+      entry.sendFn();
+    } else {
+      this.pending.splice(idx, 1);
+      if (this.onTimeout) this.onTimeout(entry.cmd);
+    }
   }
 
   _processByte(c) {
@@ -93,8 +130,11 @@ export class MspParser {
 
       case S_CHECKSUM:
         this.state = S_IDLE;
-        if ((this.checksum & 0xFF) === c && this.onMessage) {
-          this.onMessage({ cmd: this.cmd, payload: this.payload });
+        if ((this.checksum & 0xFF) === c) {
+          this._resolveRequest(this.cmd);
+          if (this.onMessage) {
+            this.onMessage({ cmd: this.cmd, payload: this.payload });
+          }
         }
         break;
     }

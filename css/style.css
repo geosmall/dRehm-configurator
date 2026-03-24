@@ -582,6 +582,10 @@ main {
   display: none;
 }
 
+.status-bar.stale {
+  opacity: 0.35;
+}
+
 .status-bar strong {
   color: var(--text);
   font-weight: 600;
@@ -594,6 +598,42 @@ main {
 
 .status-bar .spacer {
   flex: 1;
+}
+
+/* ─── Link quality indicator ─── */
+
+.link-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.link-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.link-indicator.active .link-dot { background: var(--green); }
+.link-indicator.active .link-label { color: var(--green); }
+
+.link-indicator.stale .link-dot {
+  background: var(--yellow);
+  animation: pulse-link 1s ease-in-out infinite;
+}
+.link-indicator.stale .link-label { color: var(--yellow); }
+
+.link-indicator.dead .link-dot {
+  background: var(--red-bright);
+  animation: pulse-link 0.5s ease-in-out infinite;
+}
+.link-indicator.dead .link-label { color: var(--red-bright); }
+
+@keyframes pulse-link {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 /* ─── Terminal ─── */

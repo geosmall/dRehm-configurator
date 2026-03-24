@@ -6,7 +6,7 @@
  * falling back to network. Bump CACHE_VERSION to force update.
  */
 
-const CACHE_VERSION = 'drehm-v8';
+const CACHE_VERSION = 'drehm-v11';
 
 const APP_SHELL = [
   './',
