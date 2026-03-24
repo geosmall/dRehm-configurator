@@ -9,7 +9,7 @@ import { setText, sensorString, sleep } from './util.js';
 import { handleStatusMessage } from './tabs/status.js';
 import { handleReceiverMessage } from './tabs/receiver.js';
 import { handleSensorsMessage } from './tabs/sensors.js';
-import { cliParse, enterCli, exitCli, cliReset } from './cli.js';
+import { cliParse, enterCli, exitCli, cliReset, setRebootCallback } from './cli.js';
 import { initTerminal, onTerminalActivate, onTerminalDeactivate } from './tabs/terminal.js';
 
 // --- Globals ---
@@ -17,6 +17,8 @@ const serial = new Serial();
 const parser = new MspParser();
 let pollTimer = null;
 let activeTab = 'status';
+let rebootPending = false;
+let reconnecting = false;
 
 // --- FC identity (populated on connect) ---
 let fcVariant = '';
@@ -67,14 +69,25 @@ refreshPortList();
 // --- Connection ---
 
 btnConnect.addEventListener('click', async () => {
+  if (reconnecting) {
+    // Cancel auto-reconnect wait
+    serial.cancelWaitForPort();
+    await serial.disconnect();
+    reconnecting = false;
+    disconnectUI();
+    refreshPortList();
+    return;
+  }
   if (serial.connected) {
     // If in CLI mode, exit first
     if (activeTab === 'terminal') {
       await exitCli(serial, switchToMsp);
     }
+    rebootPending = false;
+    serial.onDisconnect = null;  // Prevent read loop from double-firing onDisconnect
     stopPolling();
     await serial.disconnect();
-    onDisconnect();
+    disconnectUI();
     refreshPortList();
   } else {
     try {
@@ -100,7 +113,7 @@ function onConnect() {
 
   btnConnect.textContent = 'Disconnect';
   connStatus.textContent = 'Connected';
-  connStatus.classList.remove('disconnected');
+  connStatus.classList.remove('disconnected', 'reconnecting');
   connStatus.classList.add('connected');
   portSelect.disabled = true;
   sidebar.classList.remove('hidden');
@@ -116,6 +129,9 @@ function onConnect() {
   // Initialize terminal tab
   initTerminal(serial);
 
+  // Reboot detection — flag for auto-reconnect in onDisconnect
+  setRebootCallback(() => { rebootPending = true; });
+
   // Query identity then start polling
   queryIdentity();
 }
@@ -123,9 +139,20 @@ function onConnect() {
 function onDisconnect() {
   stopPolling();
   cliReset();
+  if (rebootPending) {
+    rebootPending = false;
+    handleRebootReconnect();
+    return;
+  }
+
+  disconnectUI();
+}
+
+/** Full UI teardown for a real disconnect */
+function disconnectUI() {
   btnConnect.textContent = 'Connect';
   connStatus.textContent = 'Disconnected';
-  connStatus.classList.remove('connected');
+  connStatus.classList.remove('connected', 'reconnecting');
   connStatus.classList.add('disconnected');
   portSelect.disabled = false;
   sidebar.classList.add('hidden');
@@ -141,6 +168,34 @@ function onDisconnect() {
   // If terminal was active, switch back to status tab visually
   if (activeTab === 'terminal') {
     activateTab('status');
+  }
+}
+
+/** Wait for FC to reappear after reboot, then reconnect */
+async function handleRebootReconnect() {
+  reconnecting = true;
+  connStatus.textContent = 'Reconnecting...';
+  connStatus.classList.remove('connected', 'disconnected');
+  connStatus.classList.add('reconnecting');
+  // If still on terminal tab (user typed 'exit'), switch to status
+  if (activeTab === 'terminal') {
+    activateTab('status');
+  }
+
+  const port = serial.port;
+  const reappeared = await serial.waitForPort(5000);
+  reconnecting = false;
+
+  if (!reappeared || !port) {
+    disconnectUI();
+    return;
+  }
+
+  try {
+    await serial.connectPort(port, 115200);
+    onConnect();
+  } catch {
+    disconnectUI();
   }
 }
 
@@ -301,7 +356,11 @@ function activateTab(target) {
   // Update tab content
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
   const section = document.getElementById('tab-' + target);
-  if (section) section.classList.add('active');
+  if (section) {
+    section.classList.add('active');
+    // Reset displayed values so fresh data arrival is visible
+    section.querySelectorAll('.val').forEach(el => el.textContent = '--');
+  }
 
   activeTab = target;
 }
@@ -315,7 +374,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     const wasTerminal = activeTab === 'terminal';
     const goingToTerminal = target === 'terminal';
 
-    // Leaving terminal → exit CLI, resume MSP
+    // Leaving terminal → exit CLI (soft return to MSP), resume polling
     if (wasTerminal && serial.connected) {
       onTerminalDeactivate();
       await exitCli(serial, switchToMsp);

@@ -14,6 +14,9 @@ let inCliMode = false;
 /** Callback for received text data in CLI mode */
 let onTextReceive = null;
 
+/** Callback when FC sends "Rebooting" (Phase 11: auto-reconnect) */
+let onRebootDetected = null;
+
 /** Text decoder for incoming bytes */
 const decoder = new TextDecoder();
 
@@ -49,6 +52,9 @@ export function cliParse(data) {
     bannerTimer = null;
     r(true);
   }
+  if (onRebootDetected && text.includes('Rebooting')) {
+    onRebootDetected();
+  }
   if (onTextReceive) onTextReceive(text);
 }
 
@@ -58,6 +64,14 @@ export function cliParse(data) {
  */
 export function setCliReceiver(cb) {
   onTextReceive = cb;
+}
+
+/**
+ * Set callback for FC reboot detection (fired when "Rebooting" appears in CLI output).
+ * @param {function} cb - Called once when reboot is detected
+ */
+export function setRebootCallback(cb) {
+  onRebootDetected = cb;
 }
 
 /**

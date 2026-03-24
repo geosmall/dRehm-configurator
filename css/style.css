@@ -124,6 +124,17 @@ header {
   color: var(--green);
 }
 
+.conn-badge.reconnecting {
+  background: rgba(255, 180, 40, 0.18);
+  color: #ffb428;
+  animation: pulse-badge 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* Port selector */
 
 .port-select {

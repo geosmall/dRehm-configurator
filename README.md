@@ -56,11 +56,13 @@ Mode switching: `#` enters CLI mode, `exit` returns to MSP telemetry.
 ## Development
 
 ```bash
-# Serve locally
-cd drehm-pwa
-python3 -m http.server 8080
-# Open http://localhost:8080 in Chrome/Edge
+# Serve locally (from workspace root)
+python3 -m http.server 8080 -d dRehm-configurator
 ```
+
+Then open http://localhost:8080 in Chrome/Edge.
+
+WebSerial requires `localhost` or HTTPS — `file://` URLs will not work.
 
 ## License
 
