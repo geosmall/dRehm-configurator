@@ -39,7 +39,7 @@ Then open http://localhost:8080 in Chrome/Edge.
 `sw.js` uses a cache-first strategy. The browser serves cached JS/CSS unless `CACHE_VERSION` changes.
 
 - **During development**: Bump `CACHE_VERSION` in `sw.js` on every change, then Ctrl+Shift+R to reload. Without this, the browser serves stale cached code.
-- **On release**: Reset `CACHE_VERSION` to `'drehm-v1'` for a clean starting point.
+- **On commit**: Always increment `CACHE_VERSION` (e.g., `v2` → `v3`). Never reset or reuse a previous value — reusing causes GitHub Pages to serve stale cached files.
 - **DevTools shortcut**: F12 → Application → Service Workers → check "Update on reload" to auto-bypass cache during a dev session.
 
 ## Testing Changes
