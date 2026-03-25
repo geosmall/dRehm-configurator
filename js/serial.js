@@ -68,7 +68,11 @@ export class Serial {
     const results = ports.map((port, i) => ({
       port,
       label: this._portLabel(port, i),
+      hasUsb: !!port.getInfo().usbVendorId,
     }));
+
+    // USB-identified ports first, generic serial ports last
+    results.sort((a, b) => (b.hasUsb ? 1 : 0) - (a.hasUsb ? 1 : 0));
 
     // Add numbering when multiple ports share the same label
     const counts = {};

@@ -75,7 +75,14 @@ refreshPortList();
 
 // --- Log ---
 initLog();
-log(`Configurator started — ${navigator.platform}`);
+fetch('manifest.json').then(r => r.json()).then(m => {
+  if (m.version) {
+    setText('configurator-version', m.version);
+    log(`Configurator v${m.version} started — ${navigator.platform}`);
+  }
+}).catch(() => {
+  log(`Configurator started — ${navigator.platform}`);
+});
 if (!navigator.serial) log('WebSerial API not available — use Chrome or Edge');
 
 // --- Connection ---

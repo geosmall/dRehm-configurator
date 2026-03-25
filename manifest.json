@@ -1,6 +1,7 @@
 {
   "name": "dRehmFlight Configurator",
   "short_name": "dRehmFlight",
+  "version": "2.0.0",
   "description": "PWA configurator for dRehmFlight VTOL flight controllers",
   "start_url": ".",
   "display": "standalone",

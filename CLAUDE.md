@@ -34,6 +34,13 @@ Then open http://localhost:8080 in Chrome/Edge.
 - **CLI** (text): PWA → FC parameter tuning. `#` enters CLI, `exit` soft-returns to MSP.
 - Mode switching managed by `cli.js` — `enterCli()` / `exitCli()` handle the full protocol.
 
+## Versioning
+
+The configurator version is defined in `manifest.json` (`"version"` field) and displayed in the header on load. This is the single source of truth.
+
+- **On release**: Bump `version` in `manifest.json` to match the git tag (e.g., `"2.1.0"`)
+- **Semver**: major = breaking protocol/UI changes, minor = new features, patch = bug fixes
+
 ## Service Worker Cache
 
 `sw.js` uses a cache-first strategy. The browser serves cached JS/CSS unless `CACHE_VERSION` changes.

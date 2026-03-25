@@ -92,6 +92,11 @@ header {
   opacity: 0.6;
 }
 
+.configurator-version {
+  font-family: var(--mono);
+  color: var(--text-dim);
+}
+
 .fc-info {
   font-family: var(--mono);
   color: var(--text-dim);
