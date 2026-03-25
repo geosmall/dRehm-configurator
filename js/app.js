@@ -11,6 +11,7 @@ import { handleReceiverMessage } from './tabs/receiver.js';
 import { handleSensorsMessage } from './tabs/sensors.js';
 import { cliParse, enterCli, exitCli, cliReset, setRebootCallback } from './cli.js';
 import { initTerminal, onTerminalActivate, onTerminalDeactivate } from './tabs/terminal.js';
+import { initLog, log } from './log.js';
 
 // --- Globals ---
 const serial = new Serial();
@@ -22,6 +23,7 @@ let reconnecting = false;
 
 // --- Link quality ---
 let lastMspResponseMs = 0;
+let prevLinkState = '';
 const LINK_STALE_MS = 2000;
 const LINK_DEAD_MS  = 5000;
 
@@ -71,6 +73,11 @@ serial.onPortsChanged = () => { if (!serial.connected) refreshPortList(); };
 serial.startPortEvents();
 refreshPortList();
 
+// --- Log ---
+initLog();
+log(`Configurator started — ${navigator.platform}`);
+if (!navigator.serial) log('WebSerial API not available — use Chrome or Edge');
+
 // --- Connection ---
 
 btnConnect.addEventListener('click', async () => {
@@ -109,11 +116,13 @@ async function handleConnectClick() {
         await serial.connectNew(115200);
       }
       onConnect();
+      log('Serial port opened');
       // Refresh to pick up newly-granted port
       refreshPortList();
     } catch (err) {
       console.error('Connect failed:', err);
       connStatus.textContent = 'Connection failed';
+      log('Connection failed: ' + err.message);
     }
   }
 }
@@ -153,6 +162,7 @@ function onConnect() {
 function onDisconnect() {
   stopPolling();
   cliReset();
+  log('Serial port closed');
   if (rebootPending) {
     rebootPending = false;
     handleRebootReconnect();
@@ -188,6 +198,7 @@ function disconnectUI() {
 /** Wait for FC to reappear after reboot, then reconnect */
 async function handleRebootReconnect() {
   reconnecting = true;
+  log('FC rebooting — waiting for reconnect...');
   connStatus.textContent = 'Reconnecting...';
   connStatus.classList.remove('connected', 'disconnected');
   connStatus.classList.add('reconnecting');
@@ -201,14 +212,17 @@ async function handleRebootReconnect() {
   reconnecting = false;
 
   if (!reappeared || !port) {
+    log('Auto-reconnect failed — port did not reappear');
     disconnectUI();
     return;
   }
 
   try {
     await serial.connectPort(port, 115200);
+    log('Auto-reconnect successful');
     onConnect();
   } catch {
+    log('Auto-reconnect failed');
     disconnectUI();
   }
 }
@@ -264,6 +278,7 @@ function handleMessage(msg) {
       const nameLen = readU8(msg.payload, 8);
       boardName = String.fromCharCode(...msg.payload.slice(9, 9 + nameLen));
       updateFcInfo();
+      log(`Connected — ${fcVariant} v${fcVersion} on ${boardName}`);
       break;
     }
   }
@@ -315,6 +330,13 @@ function updateLinkIndicator(state) {
   const label = el.querySelector('.link-label');
   if (label) {
     label.textContent = state === 'active' ? 'OK' : state === 'stale' ? 'Stale' : state === 'dead' ? 'Lost' : '--';
+  }
+  // Log transitions only
+  if (state !== prevLinkState) {
+    if (state === 'stale') log('Link stale — no MSP response for 2s');
+    else if (state === 'dead') log('Link lost — no MSP response for 5s');
+    else if (state === 'active' && (prevLinkState === 'stale' || prevLinkState === 'dead')) log('Link recovered');
+    prevLinkState = state;
   }
 }
 
@@ -418,9 +440,11 @@ document.querySelectorAll('.tab').forEach(tab => {
 
     // Leaving terminal → exit CLI (soft return to MSP), resume polling
     if (wasTerminal && serial.connected) {
+      log('Exiting CLI mode');
       onTerminalDeactivate();
       await exitCli(serial, switchToMsp);
       parser.reset();
+      lastMspResponseMs = 0;  // Suppress stale check until first response
       statusBar.classList.remove('stale');
       startPolling();
     }
@@ -435,10 +459,12 @@ document.querySelectorAll('.tab').forEach(tab => {
       onTerminalActivate();  // Set auto-load flag before CLI entry so banner prompt triggers it
       const ok = await enterCli(serial, switchToCli, switchToMsp);
       if (!ok) {
+        log('CLI entry failed — FC did not respond');
         activateTab(prevTab);
         startPolling();
         return;
       }
+      log('Entered CLI mode');
     }
 
     // Switching between non-terminal tabs → restart polling at correct rate

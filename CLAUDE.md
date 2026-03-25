@@ -21,6 +21,7 @@ Then open http://localhost:8080 in Chrome/Edge.
 | `js/serial.js` | Web Serial API wrapper (port scan, connect, read/write, reconnect) |
 | `js/msp.js` | MSP V1 encoder/decoder, message dispatch |
 | `js/cli.js` | CLI mode protocol (enter/exit, banner validation, reboot detection) |
+| `js/log.js` | INAV-style collapsible log panel (timestamped event log) |
 | `js/util.js` | Shared helpers (setText, sleep, sensorString) |
 | `js/tabs/*.js` | Per-tab handlers (status, receiver, sensors, terminal) |
 | `css/style.css` | All styles |

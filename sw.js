@@ -16,6 +16,7 @@ const APP_SHELL = [
   './js/serial.js',
   './js/msp.js',
   './js/cli.js',
+  './js/log.js',
   './js/util.js',
   './js/tabs/status.js',
   './js/tabs/receiver.js',
