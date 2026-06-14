@@ -6,7 +6,7 @@
  * falling back to network. Bump CACHE_VERSION to force update.
  */
 
-const CACHE_VERSION = 'drehm-v9';
+const CACHE_VERSION = 'drehm-v12';
 
 const APP_SHELL = [
   './',
@@ -18,10 +18,19 @@ const APP_SHELL = [
   './js/cli.js',
   './js/log.js',
   './js/util.js',
+  './js/instruments.js',
   './js/tabs/status.js',
   './js/tabs/receiver.js',
   './js/tabs/sensors.js',
   './js/tabs/terminal.js',
+  './images/flightindicators/fi_box.svg',
+  './images/flightindicators/fi_circle.svg',
+  './images/flightindicators/horizon_back.svg',
+  './images/flightindicators/horizon_ball.svg',
+  './images/flightindicators/horizon_circle.svg',
+  './images/flightindicators/horizon_mechanics.svg',
+  './images/flightindicators/heading_yaw.svg',
+  './images/flightindicators/heading_mechanics.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/favicon-32.png',

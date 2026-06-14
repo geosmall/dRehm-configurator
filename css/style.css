@@ -394,6 +394,59 @@ main {
   color: var(--green);
 }
 
+/* ─── Status tab two-column layout (data left, instruments right) ─── */
+
+.status-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.status-main {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.status-side {
+  flex: 0 0 auto;
+  width: 340px;
+}
+
+.status-side .panel {
+  margin-bottom: 0;
+}
+
+/* ─── Flight instruments (attitude + heading) ─── */
+
+.instrument-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.instrument-host {
+  flex: 0 0 auto;
+}
+
+/* Layered-SVG indicator: overlapping absolutely-positioned images.
+   Ported from the GPLv3 jQuery-Flight-Indicators plugin (S. Matton). */
+.instrument {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.instrument .box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
 /* ─── RC Channel bars ─── */
 
 .channel-list {

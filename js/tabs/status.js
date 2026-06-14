@@ -5,6 +5,19 @@
 
 import { MSP, readU8, readU16, readS16, readU32 } from '../msp.js';
 import { setText, sensorString } from '../util.js';
+import { createInstrument } from '../instruments.js';
+
+// Lazily-created flight instruments (artificial horizon + heading).
+let attitudeInst = null;
+let headingInst = null;
+
+function ensureInstruments() {
+  if (attitudeInst) return;
+  const a = document.getElementById('inst-attitude');
+  const h = document.getElementById('inst-heading');
+  if (a) attitudeInst = createInstrument(a, 'attitude', { size: 130 });
+  if (h) headingInst = createInstrument(h, 'heading', { size: 130 });
+}
 
 /** Handle incoming MSP messages for the Status tab */
 export function handleStatusMessage(msg) {
@@ -37,6 +50,10 @@ export function handleStatusMessage(msg) {
       setText('val-roll', roll.toFixed(1) + '\u00B0');
       setText('val-pitch', pitch.toFixed(1) + '\u00B0');
       setText('val-yaw', yaw + '\u00B0');
+
+      ensureInstruments();
+      if (attitudeInst) { attitudeInst.setRoll(roll); attitudeInst.setPitch(pitch); }
+      if (headingInst) headingInst.setHeading(yaw);
       break;
     }
 

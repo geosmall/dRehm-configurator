@@ -57,54 +57,67 @@
     <main>
       <!-- Status Tab -->
       <section id="tab-status" class="tab-content active">
-        <div class="panel">
-          <div class="panel-title">Flight Controller Status</div>
-          <div class="status-grid">
-            <div class="status-item">
-              <label>Armed</label>
-              <span id="val-armed" class="val">--</span>
+        <div class="status-layout">
+          <div class="status-main">
+            <div class="panel">
+              <div class="panel-title">Flight Controller Status</div>
+              <div class="status-grid">
+                <div class="status-item">
+                  <label>Armed</label>
+                  <span id="val-armed" class="val">--</span>
+                </div>
+                <div class="status-item">
+                  <label>Cycle Time</label>
+                  <span id="val-cycletime" class="val">--</span>
+                </div>
+                <div class="status-item">
+                  <label>CPU Load</label>
+                  <span id="val-cpuload" class="val">--</span>
+                </div>
+                <div class="status-item">
+                  <label>Sensors</label>
+                  <span id="val-sensors" class="val">--</span>
+                </div>
+              </div>
             </div>
-            <div class="status-item">
-              <label>Cycle Time</label>
-              <span id="val-cycletime" class="val">--</span>
+            <div class="panel">
+              <div class="panel-title">Attitude</div>
+              <div class="status-grid">
+                <div class="status-item">
+                  <label>Roll</label>
+                  <span id="val-roll" class="val">--</span>
+                </div>
+                <div class="status-item">
+                  <label>Pitch</label>
+                  <span id="val-pitch" class="val">--</span>
+                </div>
+                <div class="status-item">
+                  <label>Yaw</label>
+                  <span id="val-yaw" class="val">--</span>
+                </div>
+              </div>
             </div>
-            <div class="status-item">
-              <label>CPU Load</label>
-              <span id="val-cpuload" class="val">--</span>
-            </div>
-            <div class="status-item">
-              <label>Sensors</label>
-              <span id="val-sensors" class="val">--</span>
+            <div class="panel">
+              <div class="panel-title">Analog</div>
+              <div class="status-grid">
+                <div class="status-item">
+                  <label>Battery</label>
+                  <span id="val-vbat" class="val">--</span>
+                </div>
+                <div class="status-item">
+                  <label>RSSI</label>
+                  <span id="val-rssi" class="val">--</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="panel">
-          <div class="panel-title">Attitude</div>
-          <div class="status-grid">
-            <div class="status-item">
-              <label>Roll</label>
-              <span id="val-roll" class="val">--</span>
-            </div>
-            <div class="status-item">
-              <label>Pitch</label>
-              <span id="val-pitch" class="val">--</span>
-            </div>
-            <div class="status-item">
-              <label>Yaw</label>
-              <span id="val-yaw" class="val">--</span>
-            </div>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-title">Analog</div>
-          <div class="status-grid">
-            <div class="status-item">
-              <label>Battery</label>
-              <span id="val-vbat" class="val">--</span>
-            </div>
-            <div class="status-item">
-              <label>RSSI</label>
-              <span id="val-rssi" class="val">--</span>
+          <div class="status-side">
+            <div class="panel">
+              <div class="panel-title">Instruments</div>
+              <div class="instrument-row">
+                <div id="inst-attitude" class="instrument-host"></div>
+                <div id="inst-heading" class="instrument-host"></div>
+              </div>
             </div>
           </div>
         </div>
