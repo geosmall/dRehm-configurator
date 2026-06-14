@@ -923,3 +923,107 @@ main {
     font-size: 0.75rem;
   }
 }
+
+/* ─── Bootloader controls ─── */
+
+.bootloader-note {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.bootloader-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-bootloader {
+  background: var(--bg-content);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-bootloader:hover:not(:disabled) {
+  background: var(--red-dark);
+  border-color: var(--red);
+  color: white;
+}
+
+.btn-bootloader:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.bootloader-warn {
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: var(--yellow);
+}
+
+/* ─── Overlay (bootloader guidance) ─── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.overlay-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 560px;
+  width: calc(100% - 40px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.overlay-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.overlay-body {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.overlay-body p {
+  margin: 0 0 10px;
+}
+
+.overlay-body code {
+  font-family: var(--mono);
+  background: #0a0a15;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.overlay-body pre {
+  font-family: var(--mono);
+  background: #0a0a15;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0 0 10px;
+}

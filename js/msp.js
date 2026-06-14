@@ -17,6 +17,16 @@ export const MSP = {
   RC:          105,
   ATTITUDE:    108,
   ANALOG:      110,
+  REBOOT:      68,
+};
+
+// MSP_REBOOT payload modes (must match msp.h on the FC).
+// Only FIRMWARE / BOOTLOADER_ROM (+ BOOTLOADER_FLASH when bootuf2 is present)
+// are actioned by the FC; others are ACK-only.
+export const REBOOT_MODE = {
+  FIRMWARE:        0,  // plain NVIC_SystemReset (normal reboot)
+  BOOTLOADER_ROM:  1,  // ST system DFU bootloader (USB 0483:df11)
+  BOOTLOADER_FLASH: 4, // bootuf2 (USB 239a:006f, mass-storage)
 };
 
 // Parser states
@@ -148,12 +158,22 @@ export class MspParser {
 /**
  * Build an MSP V1 request frame.
  * @param {number} cmd - MSP command code
+ * @param {number[]|Uint8Array} [payload=[]] - Optional payload bytes
  * @returns {Uint8Array} Complete frame ready to send
+ *
+ * Frame: '$' 'M' '<' len cmd <payload...> checksum
+ * checksum = XOR of len, cmd, and every payload byte.
  */
-export function mspEncode(cmd) {
-  // $M< + len(0) + cmd + checksum
-  const checksum = (0 ^ cmd) & 0xFF;
-  return new Uint8Array([0x24, 0x4D, 0x3C, 0x00, cmd, checksum]);
+export function mspEncode(cmd, payload = []) {
+  const len = payload.length;
+  let checksum = len ^ cmd;
+  const frame = [0x24, 0x4D, 0x3C, len, cmd];
+  for (const b of payload) {
+    frame.push(b & 0xFF);
+    checksum ^= b;
+  }
+  frame.push(checksum & 0xFF);
+  return new Uint8Array(frame);
 }
 
 // Payload data view helpers

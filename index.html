@@ -51,6 +51,7 @@
       <button class="tab" data-tab="receiver">Receiver</button>
       <button class="tab" data-tab="sensors">Sensors</button>
       <button class="tab" data-tab="terminal">CLI</button>
+      <button class="tab" data-tab="firmware">Firmware</button>
     </nav>
 
     <main>
@@ -321,6 +322,24 @@
           </div>
         </div>
       </section>
+
+      <!-- Firmware Tab -->
+      <section id="tab-firmware" class="tab-content">
+        <div class="panel">
+          <div class="panel-title">Firmware / Bootloader</div>
+          <p class="bootloader-note">
+            Reboot the flight controller into a bootloader to reflash firmware.
+            The board disconnects from the configurator when it enters the bootloader.
+          </p>
+          <div class="bootloader-actions">
+            <button id="btn-dfu" class="btn-bootloader" disabled>Enter DFU bootloader</button>
+            <button id="btn-uf2" class="btn-bootloader" disabled>Enter UF2 bootloader</button>
+          </div>
+          <div id="bootloader-armed-warn" class="bootloader-warn hidden">
+            Disarm the flight controller to enable bootloader entry.
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -341,6 +360,15 @@
     <span class="sep">|</span>
     <span id="bar-version"></span>
   </footer>
+
+  <!-- Bootloader guidance overlay (shown after entering a bootloader) -->
+  <div id="bootloader-guidance" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title" id="bl-guide-title">Bootloader</div>
+      <div class="overlay-body" id="bl-guide-body"></div>
+      <button id="bl-guide-close" class="btn-connect">Close</button>
+    </div>
+  </div>
 
   <script type="module" src="js/app.js"></script>
   <script>

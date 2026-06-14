@@ -4,7 +4,7 @@
  */
 
 import { Serial } from './serial.js';
-import { MspParser, MSP, mspEncode, readU8, readU16, readU32 } from './msp.js';
+import { MspParser, MSP, REBOOT_MODE, mspEncode, readU8, readU16, readU32 } from './msp.js';
 import { setText, sensorString, sleep } from './util.js';
 import { handleStatusMessage } from './tabs/status.js';
 import { handleReceiverMessage } from './tabs/receiver.js';
@@ -48,6 +48,8 @@ const connStatus  = document.getElementById('conn-status');
 const portSelect  = document.getElementById('port-select');
 const sidebar     = document.getElementById('sidebar');
 const statusBar   = document.getElementById('status-bar');
+const btnDfu      = document.getElementById('btn-dfu');
+const btnUf2      = document.getElementById('btn-uf2');
 
 // --- Port scanning ---
 
@@ -203,6 +205,7 @@ function disconnectUI() {
   portSelect.disabled = false;
   sidebar.classList.add('hidden');
   statusBar.classList.add('hidden');
+  updateBootloaderControls(true);  // disable bootloader buttons until armed state is known
   setText('fc-info', '');
   fcVariant = '';
   fcVersion = '';
@@ -417,6 +420,76 @@ function updateStatusBar(msg) {
   setText('bar-cycle', cycleTime + ' \u00B5s');
   setText('bar-cpu', cpuLoad + '%');
   setText('bar-sensors', sensorString(sensors));
+
+  updateBootloaderControls(armed);
+}
+
+// --- Bootloader entry ---
+
+/** Enable/disable bootloader buttons based on armed state (FC refuses while armed) */
+function updateBootloaderControls(armed) {
+  if (btnDfu) btnDfu.disabled = armed;
+  if (btnUf2) btnUf2.disabled = armed;
+  const warn = document.getElementById('bootloader-armed-warn');
+  if (warn) warn.classList.toggle('hidden', !armed);
+}
+
+/**
+ * Send MSP_REBOOT with a bootloader mode, then tear the connection down cleanly.
+ * The board re-enumerates as a bootloader device (not MSP/CLI), so this does NOT
+ * use the auto-reconnect path \u2014 we disconnect and show reflash guidance instead.
+ */
+async function sendBootloaderReboot(mode) {
+  if (!serial.connected) return;
+  rebootExpectedUntil = 0;        // bootloader device won't return as MSP/CLI \u2014 no reconnect
+  serial.onDisconnect = null;     // we own the teardown; prevent read-loop double-fire
+
+  try {
+    await serial.write(mspEncode(MSP.REBOOT, [mode]));
+  } catch (err) {
+    log('Failed to send MSP_REBOOT: ' + err.message);
+    serial.onDisconnect = () => onDisconnect();
+    return;
+  }
+  log(`MSP_REBOOT sent (mode ${mode}) \u2014 board entering bootloader`);
+
+  // Let the FC ACK + flush + reset and the USB device re-enumerate before closing.
+  await sleep(500);
+  stopPolling();
+  await serial.disconnect();
+  disconnectUI();
+  showBootloaderGuidance(mode);
+  refreshPortList();
+}
+
+/** Populate and show the post-reboot reflash guidance overlay */
+function showBootloaderGuidance(mode) {
+  const titleEl = document.getElementById('bl-guide-title');
+  const bodyEl  = document.getElementById('bl-guide-body');
+  const overlay = document.getElementById('bootloader-guidance');
+  if (!titleEl || !bodyEl || !overlay) return;
+
+  if (mode === REBOOT_MODE.BOOTLOADER_ROM) {
+    titleEl.textContent = 'DFU bootloader (revert to stock)';
+    bodyEl.innerHTML =
+      '<p>The board is now in the ST DFU bootloader (USB <code>0483:df11</code>). ' +
+      'It is no longer an MSP/CLI device.</p>' +
+      '<p>Reflash stock firmware with <code>dfu-util</code>:</p>' +
+      '<pre>dfu-util -a 0 -s 0x08000000:mass-erase:force\n' +
+      'dfu-util -R -a 0 --dfuse-address 0x08000000 -D &lt;stock&gt;.bin</pre>' +
+      '<p>Power-cycle the board to return to normal firmware boot.</p>';
+  } else if (mode === REBOOT_MODE.BOOTLOADER_FLASH) {
+    titleEl.textContent = 'UF2 bootloader (.uf2 update)';
+    bodyEl.innerHTML =
+      '<p>The board is now in the UF2 bootloader (USB <code>239a:006f</code>). ' +
+      'A mass-storage drive should appear on your computer.</p>' +
+      '<p>Drag the new dRehmFlight <code>.uf2</code> file onto that drive. ' +
+      'The board reboots into the new firmware when the copy completes.</p>';
+  } else {
+    titleEl.textContent = 'Bootloader';
+    bodyEl.innerHTML = '<p>The board has rebooted.</p>';
+  }
+  overlay.classList.remove('hidden');
 }
 
 /** Update link quality dot + label in status bar */
@@ -578,4 +651,35 @@ document.querySelectorAll('.tab').forEach(tab => {
 const refreshSel = document.getElementById('sensor-refresh');
 if (refreshSel) {
   refreshSel.addEventListener('change', () => restartPolling());
+}
+
+// --- Bootloader controls ---
+
+if (btnDfu) {
+  btnDfu.addEventListener('click', () => {
+    if (btnDfu.disabled) return;
+    if (confirm('Reboot the flight controller into the ST DFU bootloader?\n\n' +
+                'The board will disconnect from the configurator. Reflash firmware ' +
+                'with dfu-util, or power-cycle the board to return to the current firmware.')) {
+      sendBootloaderReboot(REBOOT_MODE.BOOTLOADER_ROM);
+    }
+  });
+}
+
+if (btnUf2) {
+  btnUf2.addEventListener('click', () => {
+    if (btnUf2.disabled) return;
+    if (confirm('Reboot the flight controller into the UF2 bootloader?\n\n' +
+                'The board will disconnect and appear as a mass-storage drive ' +
+                'for drag-and-drop firmware update.')) {
+      sendBootloaderReboot(REBOOT_MODE.BOOTLOADER_FLASH);
+    }
+  });
+}
+
+const blGuideClose = document.getElementById('bl-guide-close');
+if (blGuideClose) {
+  blGuideClose.addEventListener('click', () => {
+    document.getElementById('bootloader-guidance').classList.add('hidden');
+  });
 }
