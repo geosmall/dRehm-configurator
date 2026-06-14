@@ -39,7 +39,6 @@ export class Serial {
     this.onReceive = null;      // callback(Uint8Array)
     this.onDisconnect = null;
     this.onPortsChanged = null; // callback() — port list changed
-    this._cancelWait = null;    // cancellation fn for waitForPort
   }
 
   get connected() {
@@ -88,6 +87,21 @@ export class Serial {
     return results;
   }
 
+  /**
+   * Return granted SerialPort objects matching a USB VID/PID.
+   * Used by reboot-reconnect: after a CDC re-enumeration the original port handle
+   * is dead (the device has no serial number for Chrome to correlate), so we must
+   * find the live object from getPorts() rather than reuse the stale reference.
+   */
+  async getMatchingPorts(vendorId, productId) {
+    if (!navigator.serial) return [];
+    const ports = await navigator.serial.getPorts();
+    return ports.filter(p => {
+      const i = p.getInfo();
+      return i.usbVendorId === vendorId && i.usbProductId === productId;
+    });
+  }
+
   /** Connect to a specific port object */
   async connectPort(port, baudRate = 115200) {
     await this.disconnect();
@@ -127,51 +141,6 @@ export class Serial {
     if (!this.writer) return;
     const buf = data instanceof Uint8Array ? data : new Uint8Array(data);
     await this.writer.write(buf);
-  }
-
-  /**
-   * Wait for the current port to reappear after a reboot-triggered disconnect.
-   * Polls getPorts() every 500ms checking if the same port object reappears.
-   * @param {number} timeoutMs - Maximum wait time (default 5000)
-   * @returns {Promise<boolean>} true if port reappeared, false on timeout/cancel
-   */
-  waitForPort(timeoutMs = 5000) {
-    const target = this.port;
-    if (!target) return Promise.resolve(false);
-
-    return new Promise(resolve => {
-      const pollMs = 500;
-      let elapsed = 0;
-      let timerId = null;
-
-      const check = async () => {
-        const ports = await navigator.serial.getPorts();
-        if (ports.includes(target)) {
-          this._cancelWait = null;
-          resolve(true);
-          return;
-        }
-        elapsed += pollMs;
-        if (elapsed >= timeoutMs) {
-          this._cancelWait = null;
-          resolve(false);
-          return;
-        }
-        timerId = setTimeout(check, pollMs);
-      };
-
-      timerId = setTimeout(check, pollMs);
-      this._cancelWait = () => {
-        clearTimeout(timerId);
-        this._cancelWait = null;
-        resolve(false);
-      };
-    });
-  }
-
-  /** Cancel a pending waitForPort (e.g. user clicks Disconnect during wait) */
-  cancelWaitForPort() {
-    if (this._cancelWait) this._cancelWait();
   }
 
   /** Build a display label from port VID/PID info */

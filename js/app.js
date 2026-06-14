@@ -18,8 +18,18 @@ const serial = new Serial();
 const parser = new MspParser();
 let pollTimer = null;
 let activeTab = 'status';
-let rebootPending = false;
 let reconnecting = false;
+
+// --- Reboot/reconnect (mirrors betaflight-configurator's serial reconnect) ---
+// A command that may reboot the FC (CLI exit, save, reboot) stamps a window; a port
+// drop within it is treated as a reboot (→ retry-reconnect) rather than an unplug.
+// dRehmFlight's soft CLI exit produces no drop, so the window just expires harmlessly.
+const REBOOT_WINDOW_MS           = 10000; // a drop within this of a reboot cmd = reboot, not unplug
+const REBOOT_FLUSH_DELAY_MS      = 1500;  // let the reset + USB drop settle before the first attempt
+const REBOOT_RECONNECT_RETRY_MS  = 1000;  // retry cadence
+const REBOOT_CONNECT_MAX_TIME_MS = 10000; // overall reconnect window
+const RECONNECT_PROBE_MS         = 800;   // per-attempt wait for an MSP response before retrying
+let rebootExpectedUntil = 0;              // performance.now() deadline for "drop == reboot"
 
 // --- Link quality ---
 let lastMspResponseMs = 0;
@@ -95,10 +105,9 @@ btnConnect.addEventListener('click', async () => {
 
 async function handleConnectClick() {
   if (reconnecting) {
-    // Cancel auto-reconnect wait
-    serial.cancelWaitForPort();
-    await serial.disconnect();
+    // Cancel the in-progress reconnect loop (it checks `reconnecting` each tick)
     reconnecting = false;
+    await serial.disconnect();
     disconnectUI();
     refreshPortList();
     return;
@@ -108,7 +117,7 @@ async function handleConnectClick() {
     if (activeTab === 'terminal') {
       await exitCli(serial, switchToMsp);
     }
-    rebootPending = false;
+    rebootExpectedUntil = 0;
     serial.onDisconnect = null;  // Prevent read loop from double-firing onDisconnect
     stopPolling();
     await serial.disconnect();
@@ -159,8 +168,10 @@ function onConnect() {
   // Initialize terminal tab
   initTerminal(serial);
 
-  // Reboot detection — flag for auto-reconnect in onDisconnect
-  setRebootCallback(() => { rebootPending = true; });
+  // Reboot detection (CLI "Rebooting" text) — arm the reconnect window as a hint.
+  // The tab-switch exit path arms it explicitly too, since Betaflight emits "Rebooting"
+  // too late for the CLI parser to catch it.
+  setRebootCallback(armRebootWindow);
 
   // Query identity then start polling
   queryIdentity();
@@ -170,8 +181,12 @@ function onDisconnect() {
   stopPolling();
   cliReset();
   log('Serial port closed');
-  if (rebootPending) {
-    rebootPending = false;
+
+  // A drop within the reboot window = the FC rebooted (CLI exit/reboot/save) →
+  // retry-reconnect. Otherwise it's a genuine unplug → disconnect (Decision A).
+  const rebootExpected = performance.now() < rebootExpectedUntil;
+  rebootExpectedUntil = 0;
+  if (rebootExpected) {
     handleRebootReconnect();
     return;
   }
@@ -202,36 +217,111 @@ function disconnectUI() {
   }
 }
 
-/** Wait for FC to reappear after reboot, then reconnect */
+/** Mark that we just issued a command that may reboot the FC. A port drop within
+ *  the window is then treated as a reboot (→ reconnect) rather than an unplug. */
+function armRebootWindow() {
+  rebootExpectedUntil = performance.now() + REBOOT_WINDOW_MS;
+}
+
+/**
+ * Reconnect after an FC reboot. Mirrors betaflight-configurator: wait for the reset
+ * to settle, then retry-connect on a cadence within a generous window, confirming
+ * success with a real MSP response (not just a reopened port). Tolerant of early
+ * attempts that connect to a still-booting FC and get dropped.
+ */
 async function handleRebootReconnect() {
   reconnecting = true;
-  log('FC rebooting — waiting for reconnect...');
+  log('FC rebooting — reconnecting...');
   connStatus.textContent = 'Reconnecting...';
   connStatus.classList.remove('connected', 'disconnected');
   connStatus.classList.add('reconnecting');
-  // If still on terminal tab (user typed 'exit'), switch to status
-  if (activeTab === 'terminal') {
-    activateTab('status');
-  }
+  if (activeTab === 'terminal') activateTab('status');
 
-  const port = serial.port;
-  const reappeared = await serial.waitForPort(5000);
-  reconnecting = false;
+  // Capture the USB identity, then release the stale handle. After a CDC
+  // re-enumeration that handle is dead; we reconnect to the live object that
+  // getPorts() exposes for the same VID/PID, not this reference.
+  const info = serial.port ? serial.port.getInfo() : null;
+  serial.onDisconnect = null;  // we drive connect/disconnect ourselves during the loop
+  await serial.disconnect();
 
-  if (!reappeared || !port) {
-    log('Auto-reconnect failed — port did not reappear');
+  if (!info || info.usbVendorId === undefined) {
+    reconnecting = false;
+    log('Auto-reconnect failed — no USB identity to match');
     disconnectUI();
     return;
   }
 
+  // Let the reset + USB drop settle before the first attempt.
+  await sleep(REBOOT_FLUSH_DELAY_MS);
+
+  const deadline = performance.now() + REBOOT_CONNECT_MAX_TIME_MS;
+  let sawPort = false;
+  while (reconnecting && performance.now() < deadline) {
+    const candidates = await serial.getMatchingPorts(info.usbVendorId, info.usbProductId);
+    for (const cand of candidates) {
+      if (!reconnecting) break;
+      sawPort = true;
+      if (await tryReconnect(cand)) {
+        if (!reconnecting) {           // user clicked Disconnect mid-attempt
+          await serial.disconnect();
+          return;
+        }
+        reconnecting = false;
+        log('Auto-reconnect successful');
+        onConnect();
+        return;
+      }
+    }
+    await sleep(REBOOT_RECONNECT_RETRY_MS);
+  }
+
+  if (reconnecting) {
+    reconnecting = false;
+    const secs = REBOOT_CONNECT_MAX_TIME_MS / 1000;
+    log(sawPort
+      ? `Auto-reconnect failed — FC did not respond within ${secs}s`
+      : `Auto-reconnect failed — port did not reappear within ${secs}s`);
+  }
+  disconnectUI();
+}
+
+/**
+ * One reconnect attempt against a candidate port: open it, then probe with an MSP
+ * query. Returns true only if the FC answers; otherwise closes and lets the caller
+ * retry the next candidate / tick.
+ */
+async function tryReconnect(port) {
   try {
     await serial.connectPort(port, 115200);
-    log('Auto-reconnect successful');
-    onConnect();
   } catch {
-    log('Auto-reconnect failed');
-    disconnectUI();
+    return false;  // not re-enumerated yet
   }
+  serial.onReceive = (data) => parser.parse(data);
+  const answered = await probeMsp(RECONNECT_PROBE_MS);
+  if (!answered) {
+    await serial.disconnect();  // opened but FC still booting — drop and retry
+    return false;
+  }
+  return true;
+}
+
+/** Send one identity query and resolve true on any MSP response, false on timeout. */
+function probeMsp(timeoutMs) {
+  return new Promise(resolve => {
+    let settled = false;
+    let timer = null;
+    const finish = (val) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      parser.onMessage = null;
+      resolve(val);
+    };
+    parser.reset();
+    parser.onMessage = () => finish(true);
+    timer = setTimeout(() => finish(false), timeoutMs);
+    serial.write(mspEncode(MSP.API_VERSION)).catch(() => {});
+  });
 }
 
 // --- Serial receive switching ---
@@ -445,10 +535,13 @@ document.querySelectorAll('.tab').forEach(tab => {
     const wasTerminal = activeTab === 'terminal';
     const goingToTerminal = target === 'terminal';
 
-    // Leaving terminal → exit CLI (soft return to MSP), resume polling
+    // Leaving terminal → exit CLI, resume polling. On dRehmFlight `exit` soft-returns
+    // (no drop); on Betaflight it reboots. Arm the reconnect window so that if the port
+    // drops shortly after, onDisconnect treats it as a reboot rather than an unplug.
     if (wasTerminal && serial.connected) {
       log('Exiting CLI mode');
       onTerminalDeactivate();
+      armRebootWindow();
       await exitCli(serial, switchToMsp);
       parser.reset();
       lastMspResponseMs = 0;  // Suppress stale check until first response
