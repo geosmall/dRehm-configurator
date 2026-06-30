@@ -26,7 +26,7 @@ export const MSP = {
 export const REBOOT_MODE = {
   FIRMWARE:        0,  // plain NVIC_SystemReset (normal reboot)
   BOOTLOADER_ROM:  1,  // ST system DFU bootloader (USB 0483:df11)
-  BOOTLOADER_FLASH: 4, // bootuf2 (USB 239a:006f, mass-storage)
+  BOOTLOADER_FLASH: 4, // bootuf2 (USB cafe:d473, mass-storage)
 };
 
 // Parser states

@@ -481,7 +481,7 @@ function showBootloaderGuidance(mode) {
   } else if (mode === REBOOT_MODE.BOOTLOADER_FLASH) {
     titleEl.textContent = 'UF2 bootloader (.uf2 update)';
     bodyEl.innerHTML =
-      '<p>The board is now in the UF2 bootloader (USB <code>239a:006f</code>). ' +
+      '<p>The board is now in the UF2 bootloader (USB <code>cafe:d473</code>). ' +
       'A mass-storage drive should appear on your computer.</p>' +
       '<p>Drag the new dRehmFlight <code>.uf2</code> file onto that drive. ' +
       'The board reboots into the new firmware when the copy completes.</p>';
