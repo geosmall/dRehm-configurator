@@ -391,9 +391,14 @@ function exportIni() {
     appendOutput('[No settings to export \u2014 Load first]\r\n');
     return;
   }
-  let text = '[pid]\n';
-  for (const input of inputs) {
-    text += `${input.dataset.param}=${input.value}\n`;
+  let text = '';
+  for (const groupEl of settingsForm.querySelectorAll('.settings-group')) {
+    const title = groupEl.querySelector('.settings-group-title')?.textContent || 'Other';
+    text += `[${title}]\n`;
+    for (const input of groupEl.querySelectorAll('.param-input')) {
+      text += `${input.dataset.param}=${input.value}\n`;
+    }
+    text += '\n';
   }
   // Generate filename from board name if available
   const info = document.getElementById('fc-info')?.textContent || '';
